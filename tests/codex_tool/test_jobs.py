@@ -183,18 +183,21 @@ def test_force_cancel_terminates_tree_after_grace(store: RunStore, clock: Clock)
     )
     store.transition(state.id, RunStatus.RUNNING, pid=1234, heartbeat_at=clock.now)
     forced: list[int] = []
+    cleaned: list[str] = []
     manager = JobManager(
         store,
         signal_sender=lambda pid: None,
         force_terminator=forced.append,
         process_checker=lambda pid: True,
         sleeper=lambda seconds: None,
+        resource_cleaner=cleaned.append,
         clock=clock,
     )
 
     state = manager.cancel(state.id, force=True, grace_seconds=0)
 
     assert forced == [1234]
+    assert cleaned == [state.id]
     assert state.status is RunStatus.CANCELLED
     assert state.pid is None
 

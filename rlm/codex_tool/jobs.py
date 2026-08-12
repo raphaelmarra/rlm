@@ -50,6 +50,39 @@ def force_terminate_process_tree(pid: int) -> None:
         posix_os.killpg(pid, posix_signal.SIGKILL)
 
 
+def cleanup_docker_resources(run_id: str) -> None:
+    docker = shutil.which("docker")
+    if docker is None:
+        return
+    label_filter = f"label=io.rlm-codex.run-id={run_id}"
+    containers = subprocess.run(
+        [docker, "container", "ls", "-aq", "--filter", label_filter],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    container_ids = containers.stdout.split()
+    if container_ids:
+        subprocess.run(
+            [docker, "container", "rm", "-f", *container_ids],
+            check=False,
+            capture_output=True,
+        )
+    networks = subprocess.run(
+        [docker, "network", "ls", "-q", "--filter", label_filter],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    network_ids = networks.stdout.split()
+    if network_ids:
+        subprocess.run(
+            [docker, "network", "rm", *network_ids],
+            check=False,
+            capture_output=True,
+        )
+
+
 class JobManager:
     def __init__(
         self,
@@ -59,6 +92,7 @@ class JobManager:
         process_checker: Callable[[int], bool] = process_exists,
         signal_sender: Callable[[int], None] = signal_process_group,
         force_terminator: Callable[[int], None] = force_terminate_process_tree,
+        resource_cleaner: Callable[[str], None] = cleanup_docker_resources,
         sleeper: Callable[[float], None] = time.sleep,
         clock: Callable[[], datetime] | None = None,
     ) -> None:
@@ -67,6 +101,7 @@ class JobManager:
         self.process_checker = process_checker
         self.signal_sender = signal_sender
         self.force_terminator = force_terminator
+        self.resource_cleaner = resource_cleaner
         self.sleeper = sleeper
         self.clock = clock or store.clock
 
@@ -145,6 +180,7 @@ class JobManager:
                 run_id,
                 {"status": terminal.value, "error": failure},
             )
+            self.resource_cleaner(run_id)
             return self.store.transition(
                 run_id,
                 terminal,
@@ -221,6 +257,7 @@ class JobManager:
         refreshed = self.store.read_state(run_id)
         if self.process_checker(worker_pid):
             self.force_terminator(worker_pid)
+        self.resource_cleaner(run_id)
         if refreshed.status is RunStatus.CANCELLING:
             self.store.write_result(
                 run_id,

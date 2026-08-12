@@ -192,6 +192,7 @@ def run_rlm(
             "reasoning_effort": "medium",
         },
         environment="docker",
+        environment_kwargs={"run_id": validated.run_id},
         max_depth=1,
         max_iterations=validated.max_iterations,
         max_timeout=validated.max_timeout,

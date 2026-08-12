@@ -14,11 +14,13 @@ host bridges the gap so code running in the container can:
 Setup:
     docker build -t rlm-sandbox -f Dockerfile.sandbox .
 
-Or use any Python 3.11+ image with: pip install dill requests
+Or use any Python 3.11+ image. The bridge client uses the standard library;
+``dill`` is optional and falls back to ``pickle``.
 """
 
 import base64
 import copy
+import hashlib
 import json
 import os
 import shutil
@@ -32,6 +34,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
+from rlm.codex_tool.paths import RUN_ID_PATTERN
 from rlm.core.comms_utils import LMRequest, send_lm_request, send_lm_request_batched
 from rlm.core.types import REPLResult, RLMChatCompletion
 from rlm.environments.base_env import (
@@ -275,7 +278,8 @@ def _build_exec_script(
 
     return textwrap.dedent(
         f'''
-import sys, io, json, base64, traceback, os, requests
+import sys, io, json, base64, traceback, os
+from urllib.request import Request, urlopen
 try:
     import dill
 except ImportError:
@@ -290,8 +294,15 @@ _LLM_TIMEOUT = 600
 _RLM_TIMEOUT = 3600
 
 def _post(path, payload, timeout):
-    r = requests.post(f"{{PROXY}}{{path}}", json=payload, timeout=timeout)
-    return r.json()
+    body = json.dumps(payload).encode("utf-8")
+    request = Request(
+        f"{{PROXY}}{{path}}",
+        data=body,
+        headers={{"Content-Type": "application/json"}},
+        method="POST",
+    )
+    with urlopen(request, timeout=timeout) as response:
+        return json.loads(response.read().decode("utf-8"))
 
 def llm_query(prompt, model=None):
     try:
@@ -435,8 +446,25 @@ class DockerREPL(NonIsolatedEnv):
         custom_sub_tools: dict[str, Any] | None = None,
         compaction: bool = False,
         max_concurrent_subcalls: int = 4,
+        run_id: str | None = None,
+        memory_limit: str = "512m",
+        cpu_limit: float = 1.0,
+        pids_limit: int = 128,
+        execution_user: str | None = None,
         **kwargs,
     ):
+        if run_id is not None and not RUN_ID_PATTERN.fullmatch(run_id):
+            raise ValueError(f"Invalid run id: {run_id!r}")
+        if not isinstance(pids_limit, int) or isinstance(pids_limit, bool) or pids_limit < 1:
+            raise ValueError("pids_limit must be a positive integer")
+        if not isinstance(cpu_limit, (int, float)) or isinstance(cpu_limit, bool) or cpu_limit <= 0:
+            raise ValueError("cpu_limit must be greater than zero")
+        if not isinstance(memory_limit, str) or not memory_limit.strip():
+            raise ValueError("memory_limit must be a non-empty Docker memory value")
+        if execution_user is not None and (
+            not execution_user.strip() or execution_user.split(":", 1)[0] == "0"
+        ):
+            raise ValueError("execution_user must identify a non-root user")
         super().__init__(
             persistent=persistent,
             depth=depth,
@@ -445,6 +473,10 @@ class DockerREPL(NonIsolatedEnv):
         )
 
         self.image = image
+        self.run_id = run_id
+        self.memory_limit = memory_limit
+        self.cpu_limit = float(cpu_limit)
+        self.pids_limit = pids_limit
         self.lm_handler_address = lm_handler_address
         self.subcall_fn = subcall_fn
         self.compaction = compaction
@@ -452,6 +484,7 @@ class DockerREPL(NonIsolatedEnv):
         self.proxy_server: ThreadingHTTPServer | None = None
         self.proxy_thread: threading.Thread | None = None
         self.proxy_port: int = 0
+        self.network_name: str | None = None
         self._cleaned_up = False
 
         # Multi-turn persistence bookkeeping (context_N / history_N versioning).
@@ -474,6 +507,7 @@ class DockerREPL(NonIsolatedEnv):
         )
         os.makedirs(base_dir, exist_ok=True)
         self.temp_dir = tempfile.mkdtemp(prefix="docker_repl_", dir=base_dir)
+        self.execution_user = execution_user or self.default_execution_user()
         self.pending_calls: list[RLMChatCompletion] = []
         self._calls_lock = threading.Lock()
 
@@ -488,6 +522,16 @@ class DockerREPL(NonIsolatedEnv):
             self.load_context(context_payload)
         if setup_code:
             self.execute_code(setup_code)
+
+    def default_execution_user(self) -> str:
+        if os.name == "nt" or not hasattr(os, "getuid"):
+            return "65532:65532"
+        uid = os.getuid()
+        gid = os.getgid()
+        if uid != 0:
+            return f"{uid}:{gid}"
+        os.chown(self.temp_dir, 65532, 65532)
+        return "65532:65532"
 
     def setup(self):
         """Start the proxy server and Docker container."""
@@ -520,13 +564,61 @@ class DockerREPL(NonIsolatedEnv):
         self.proxy_thread = threading.Thread(target=self.proxy_server.serve_forever, daemon=True)
         self.proxy_thread.start()
 
+        container_label = None
+        network_name = None
+        if self.run_id is not None:
+            container_label = f"io.rlm-codex.run-id={self.run_id}"
+            digest = hashlib.sha256(self.run_id.encode("utf-8")).hexdigest()[:16]
+            network_name = f"rlm-codex-{digest}"
+            self.network_name = network_name
+            network_result = subprocess.run(
+                [
+                    "docker",
+                    "network",
+                    "create",
+                    "--driver",
+                    "bridge",
+                    "--internal",
+                    "--label",
+                    container_label,
+                    network_name,
+                ],
+                capture_output=True,
+                text=True,
+            )
+            if network_result.returncode != 0:
+                self.cleanup()
+                raise RuntimeError(f"Failed to create isolated network: {network_result.stderr}")
+
         # Start Docker container
-        result = subprocess.run(
+        docker_run_command = [
+            "docker",
+            "run",
+            "-d",
+            "--rm",
+        ]
+        if container_label is not None and network_name is not None:
+            docker_run_command.extend(
+                [
+                    "--label",
+                    container_label,
+                    "--network",
+                    network_name,
+                    "--cap-drop=ALL",
+                    "--security-opt",
+                    "no-new-privileges=true",
+                    "--pids-limit",
+                    str(self.pids_limit),
+                    "--memory",
+                    self.memory_limit,
+                    "--memory-swap",
+                    self.memory_limit,
+                    "--cpus",
+                    str(self.cpu_limit),
+                ]
+            )
+        docker_run_command.extend(
             [
-                "docker",
-                "run",
-                "-d",
-                "--rm",
                 "-v",
                 f"{self.temp_dir}:/workspace",
                 "--add-host",
@@ -535,7 +627,10 @@ class DockerREPL(NonIsolatedEnv):
                 "tail",
                 "-f",
                 "/dev/null",
-            ],
+            ]
+        )
+        result = subprocess.run(
+            docker_run_command,
             capture_output=True,
             text=True,
         )
@@ -544,24 +639,6 @@ class DockerREPL(NonIsolatedEnv):
             raise RuntimeError(f"Failed to start container: {result.stderr}")
 
         self.container_id = result.stdout.strip()
-
-        # Install dependencies. dill is optional (falls back to pickle), but
-        # requests is required for llm_query/rlm_query, so verify it imports.
-        subprocess.run(
-            ["docker", "exec", self.container_id, "pip", "install", "-q", "dill", "requests"],
-            capture_output=True,
-        )
-        check = subprocess.run(
-            ["docker", "exec", self.container_id, "python", "-c", "import requests"],
-            capture_output=True,
-            text=True,
-        )
-        if check.returncode != 0:
-            self.cleanup()
-            raise RuntimeError(
-                "Failed to install 'requests' in the docker image; llm_query/rlm_query "
-                f"would not work. Use an image with requests preinstalled. Error: {check.stderr}"
-            )
 
     def load_context(self, context_payload: dict | list | str):
         """Load context as ``context_0`` (with ``context`` aliased to it)."""
@@ -698,7 +775,15 @@ class DockerREPL(NonIsolatedEnv):
             f.write(script)
 
         result = subprocess.run(
-            ["docker", "exec", self.container_id, "python", "/workspace/_exec.py"],
+            [
+                "docker",
+                "exec",
+                "--user",
+                self.execution_user,
+                self.container_id,
+                "python",
+                "/workspace/_exec.py",
+            ],
             capture_output=True,
             text=True,
         )
@@ -750,6 +835,14 @@ class DockerREPL(NonIsolatedEnv):
             )
             subprocess.run(["docker", "rm", "-f", self.container_id], capture_output=True)
             self.container_id = None
+
+        network_name = getattr(self, "network_name", None)
+        if network_name:
+            subprocess.run(
+                ["docker", "network", "rm", network_name],
+                capture_output=True,
+            )
+            self.network_name = None
 
         if getattr(self, "proxy_server", None):
             self.proxy_server.shutdown()

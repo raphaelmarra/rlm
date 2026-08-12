@@ -453,7 +453,7 @@ git commit -m "feat: add rlm-codex command surface"
 - Produces: container rotulado, usuário sem privilégio, capabilities removidas,
 `no-new-privileges`, limites de CPU/memória/PIDs e rede descartável por trabalho.
 
-- [ ] **Step 1: Escrever teste RED para os argumentos Docker obrigatórios**
+- [x] **Step 1: Escrever teste RED para os argumentos Docker obrigatórios**
 
 ```python
 def test_docker_run_applies_rlm_codex_isolation(fake_subprocess):
@@ -473,18 +473,18 @@ Run: `uv run pytest tests/codex_tool/test_docker_isolation.py -q`
 
 Expected: FAIL porque o comando upstream ainda usa rede padrão e sem limites.
 
-- [ ] **Step 2: Implementar criação/remoção de rede e argumentos de isolamento**
+- [x] **Step 2: Implementar criação/remoção de rede e argumentos de isolamento**
 
 O setup cria rede por `run_id`, conecta somente container e proxy permitido, registra
 todos os recursos com o label do trabalho e remove rede/container no `cleanup()`.
 
-- [ ] **Step 3: Cobrir falha parcial e limpeza idempotente**
+- [x] **Step 3: Cobrir falha parcial e limpeza idempotente**
 
 Run: `uv run pytest tests/test_docker_repl_robustness.py tests/codex_tool/test_docker_isolation.py -q`
 
 Expected: PASS mesmo se criação do container, instalação de dependência ou remoção falhar.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add rlm/environments/docker_repl.py tests/test_docker_repl_robustness.py tests/codex_tool/test_docker_isolation.py
