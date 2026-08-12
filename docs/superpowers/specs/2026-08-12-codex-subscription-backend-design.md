@@ -1,6 +1,6 @@
 # Backend Codex por assinatura para Recursive Language Models (RLM)
 
-**Estado:** Em revisão do usuário<br>
+**Estado:** Aprovada para implementação<br>
 **Data:** 2026-08-12<br>
 **Repositório:** `raphaelmarra/rlm`<br>
 **Branch de trabalho:** `feat/codex-subscription-backend`

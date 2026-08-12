@@ -2,8 +2,8 @@
 
 | Etapa | Entrega | Estado | Gate de saída |
 |---|---|---|---|
-| 0 | Fork, ambiente e specs | Em execução | specs auditadas e plano executável versionado |
-| 1 | `CodexClient` | Planejada | testes unitários e checks de estilo verdes |
+| 0 | Fork, ambiente e specs | Concluída | specs auditadas e plano executável versionado |
+| 1 | `CodexClient` | Em execução | testes unitários e checks de estilo verdes |
 | 2 | Smoke direto por assinatura | Planejada | chamada real com autenticação `chatgpt` e sem API key |
 | 3 | CLI e gerenciador | Planejada | comandos e máquina de estados passam com worker falso |
 | 4 | Skill global | Planejada | Codex detecta `$usar-rlm` fora do fork |

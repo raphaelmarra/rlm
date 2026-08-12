@@ -340,7 +340,8 @@ Fluxo obrigatório:
    quando a execução estiver comprovadamente presa.
 
 A fonte versionada vive em `.agents/skills/usar-rlm`. O instalador copia essa pasta
-para `~/.codex/skills/usar-rlm` e registra o commit de origem. `doctor` detecta drift.
+para `$HOME/.agents/skills/usar-rlm` e registra o commit de origem. `doctor` detecta
+drift.
 
 ## Instalação nesta máquina
 

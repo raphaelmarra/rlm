@@ -16,7 +16,7 @@ necessários ao backend e à ferramenta Codex.
 | Skill versionada | `.agents/skills/usar-rlm/` | Planejado |
 | Instalador local | `scripts/install_codex_tool.ps1` | Planejado |
 | Specs | `docs/superpowers/specs/` | Existente; specs aprovadas |
-| Planos executáveis | `docs/superpowers/plans/` | Reservado; sem plano aprovado |
+| Planos executáveis | `docs/superpowers/plans/` | Existente; plano em execução |
 | Decisões e trade-offs | `docs/decisions/` | Existente |
 | Auditorias de documentação | `docs/reviews/` | Existente |
 | Estado e governança do fork | `docs/INDEX.md`, `docs/ROADMAP.md`, `docs/CHANGELOG.md`, `docs/DECISOES.md`, `docs/ABERTO.md`, `docs/SOURCES.md` | Existente |
