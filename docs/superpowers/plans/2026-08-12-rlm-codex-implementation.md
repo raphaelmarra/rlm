@@ -190,7 +190,7 @@ git commit -m "test: prove Codex subscription backend"
 - Produces: `RunStatus`, `TERMINAL_STATUSES`, `RunState`, `success_envelope()` e `error_envelope()`.
 - Produces: `CodexPaths.from_environment()`, `RunStore.create_run()`, `read_state()`, `transition()`, `append_event()` e `write_result()`.
 
-- [ ] **Step 1: Escrever testes de estados e envelopes que falham**
+- [x] **Step 1: Escrever testes de estados e envelopes que falham**
 
 ```python
 def test_run_state_rejects_invalid_transition():
@@ -212,7 +212,7 @@ Run: `uv run pytest tests/codex_tool/test_protocol.py -q`
 
 Expected: FAIL por módulos ausentes.
 
-- [ ] **Step 2: Implementar protocolo e transições permitidas**
+- [x] **Step 2: Implementar protocolo e transições permitidas**
 
 ```python
 ALLOWED_TRANSITIONS = {
@@ -227,13 +227,13 @@ ALLOWED_TRANSITIONS = {
 }
 ```
 
-- [ ] **Step 3: Escrever testes de escrita atômica, concorrência e corrupção**
+- [x] **Step 3: Escrever testes de escrita atômica, concorrência e corrupção**
 
 Run: `uv run pytest tests/codex_tool/test_store.py -q`
 
 Expected: FAIL porque `RunStore` não existe.
 
-- [ ] **Step 4: Implementar store com temporário adjacente, flush e `os.replace`**
+- [x] **Step 4: Implementar store com temporário adjacente, flush e `os.replace`**
 
 ```python
 def atomic_write_json(path: Path, value: Mapping[str, Any]) -> None:
@@ -245,13 +245,13 @@ def atomic_write_json(path: Path, value: Mapping[str, Any]) -> None:
     os.replace(temporary, path)
 ```
 
-- [ ] **Step 5: Validar testes e estilo**
+- [x] **Step 5: Validar testes e estilo**
 
 Run: `uv run pytest tests/codex_tool/test_protocol.py tests/codex_tool/test_store.py -q`
 
 Run: `uv run ruff check rlm/codex_tool tests/codex_tool`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add rlm/codex_tool tests/codex_tool
