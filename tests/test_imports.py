@@ -67,6 +67,12 @@ class TestClientImports:
 
         assert PortkeyClient is not None
 
+    def test_codex_client_import(self):
+        pytest.importorskip("openai_codex")
+        from rlm.clients.codex import CodexClient
+
+        assert CodexClient is not None
+
     def test_get_client_function(self):
         """Test get_client function import."""
         from rlm.clients import get_client
@@ -313,6 +319,7 @@ class TestImportConflicts:
             ("rlm.clients.openai", "openai"),
             ("rlm.clients.anthropic", "anthropic"),
             ("rlm.clients.portkey", "portkey_ai"),
+            ("rlm.clients.codex", "openai_codex"),
             ("rlm.environments.modal_repl", "modal"),
             ("rlm.environments.prime_repl", "prime_sandboxes"),
         ]

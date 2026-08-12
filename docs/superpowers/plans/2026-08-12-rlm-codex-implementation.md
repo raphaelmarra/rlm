@@ -45,7 +45,7 @@ Codex novo a operar essa CLI de qualquer diretório.
 - Produces: `CodexClient.completion(prompt, model=None) -> str`, `acompletion(prompt, model=None) -> str`, `get_usage_summary() -> UsageSummary` e `get_last_usage() -> ModelUsageSummary`.
 - Produces: `get_client("codex", backend_kwargs) -> CodexClient` com importação preguiçosa.
 
-- [ ] **Step 1: Escrever os testes de serialização e autenticação que falham**
+- [x] **Step 1: Escrever os testes de serialização e autenticação que falham**
 
 ```python
 def test_completion_rejects_api_key_before_executor(monkeypatch):
@@ -70,13 +70,13 @@ def test_completion_preserves_message_order_and_tracks_usage(monkeypatch):
     assert client.get_last_usage().total_input_tokens == 12
 ```
 
-- [ ] **Step 2: Executar os testes e confirmar RED**
+- [x] **Step 2: Executar os testes e confirmar RED**
 
 Run: `uv run pytest tests/clients/test_codex.py tests/test_imports.py -q`
 
 Expected: FAIL porque `rlm.clients.codex` e o backend literal ainda não existem.
 
-- [ ] **Step 3: Implementar o executor SDK curto e o cliente mínimo**
+- [x] **Step 3: Implementar o executor SDK curto e o cliente mínimo**
 
 ```python
 @dataclass(frozen=True)
@@ -108,19 +108,19 @@ O executor padrão abre `Codex()` em contexto, exige `account.root.type == "chat
 cria temporário vazio, inicia thread com `ephemeral=True`, `Sandbox.read_only` e
 `ApprovalMode.deny_all`, executa uma única rodada e remove o temporário no `finally`.
 
-- [ ] **Step 4: Cobrir async, conta inválida, resposta vazia, timeout e limpeza**
+- [x] **Step 4: Cobrir async, conta inválida, resposta vazia, timeout e limpeza**
 
 Run: `uv run pytest tests/clients/test_codex.py -q`
 
 Expected: PASS com testes separados para sucesso, erro e cancelamento assíncrono.
 
-- [ ] **Step 5: Validar registro e estilo**
+- [x] **Step 5: Validar registro e estilo**
 
 Run: `uv run ruff check rlm/clients tests/clients tests/test_imports.py`
 
 Run: `uv run ruff format --check rlm/clients tests/clients tests/test_imports.py`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add rlm/clients/codex.py rlm/clients/__init__.py rlm/core/types.py tests/clients/test_codex.py tests/test_imports.py
