@@ -1,0 +1,240 @@
+{
+  "attempt_metrics": {
+    "A": {
+      "calls": 25,
+      "failures": 0,
+      "input_tokens": 2766906,
+      "output_tokens": 12223,
+      "subcalls": 0,
+      "total_cost": null,
+      "wall_seconds": 367.1852224999893
+    },
+    "B": {
+      "calls": 149,
+      "failure_details": [
+        {
+          "case_id": "17000253",
+          "error": "{\"message\": \"Codex returned an empty response\", \"type\": \"ValueError\"}"
+        }
+      ],
+      "failures": 1,
+      "input_tokens": 2423172,
+      "output_tokens": 236384,
+      "subcalls": 105,
+      "total_cost": null,
+      "wall_seconds": 1637.1174710999985
+    }
+  },
+  "coverage": {
+    "arms": {
+      "A": {
+        "available": 25,
+        "failed": 0,
+        "missing": 0,
+        "succeeded": 25
+      },
+      "B": {
+        "available": 9,
+        "failed": 1,
+        "missing": 16,
+        "succeeded": 8
+      }
+    },
+    "paired_succeeded": 8,
+    "planned_cases": 25
+  },
+  "e2e": {
+    "errors": [],
+    "verdict": "partial"
+  },
+  "kind": "partial",
+  "metrics": {
+    "A": {
+      "calls": 8,
+      "failures": 0,
+      "input_tokens": 883337,
+      "output_tokens": 4178,
+      "subcalls": 0,
+      "total_cost": null,
+      "wall_seconds": 121.98584629999823
+    },
+    "B": {
+      "calls": 149,
+      "failures": 0,
+      "input_tokens": 2423172,
+      "output_tokens": 236384,
+      "subcalls": 105,
+      "total_cost": null,
+      "wall_seconds": 1608.4929791999966
+    }
+  },
+  "paired_cases": [
+    {
+      "baseline": 1.0,
+      "case_id": "17000206",
+      "delta": 0.0,
+      "rlm": 1.0
+    },
+    {
+      "baseline": 1.0,
+      "case_id": "17000213",
+      "delta": 0.0,
+      "rlm": 1.0
+    },
+    {
+      "baseline": 0.0,
+      "case_id": "17000228",
+      "delta": 1.0,
+      "rlm": 1.0
+    },
+    {
+      "baseline": 0.0,
+      "case_id": "17000233",
+      "delta": 1.0,
+      "rlm": 1.0
+    },
+    {
+      "baseline": 1.0,
+      "case_id": "17000245",
+      "delta": 0.0,
+      "rlm": 1.0
+    },
+    {
+      "baseline": 1.0,
+      "case_id": "17000251",
+      "delta": 0.0,
+      "rlm": 1.0
+    },
+    {
+      "baseline": 1.0,
+      "case_id": "17000252",
+      "delta": -1.0,
+      "rlm": 0.0
+    },
+    {
+      "baseline": 1.0,
+      "case_id": "17000255",
+      "delta": 0.0,
+      "rlm": 1.0
+    }
+  ],
+  "quality": {
+    "bootstrap_95": [
+      -0.25,
+      0.5
+    ],
+    "conclusive": false,
+    "mean_delta": 0.125,
+    "verdict": "not_demonstrated"
+  },
+  "scores": {
+    "A": {
+      "cases": [
+        {
+          "case_id": "17000213",
+          "exact": true,
+          "score": 1.0,
+          "terminal_status": "succeeded"
+        },
+        {
+          "case_id": "17000206",
+          "exact": true,
+          "score": 1.0,
+          "terminal_status": "succeeded"
+        },
+        {
+          "case_id": "17000228",
+          "exact": false,
+          "score": 0.0,
+          "terminal_status": "succeeded"
+        },
+        {
+          "case_id": "17000255",
+          "exact": true,
+          "score": 1.0,
+          "terminal_status": "succeeded"
+        },
+        {
+          "case_id": "17000245",
+          "exact": true,
+          "score": 1.0,
+          "terminal_status": "succeeded"
+        },
+        {
+          "case_id": "17000233",
+          "exact": false,
+          "score": 0.0,
+          "terminal_status": "succeeded"
+        },
+        {
+          "case_id": "17000251",
+          "exact": true,
+          "score": 1.0,
+          "terminal_status": "succeeded"
+        },
+        {
+          "case_id": "17000252",
+          "exact": true,
+          "score": 1.0,
+          "terminal_status": "succeeded"
+        }
+      ],
+      "exact_hits": 6,
+      "mean_score": 0.75
+    },
+    "B": {
+      "cases": [
+        {
+          "case_id": "17000213",
+          "exact": true,
+          "score": 1.0,
+          "terminal_status": "succeeded"
+        },
+        {
+          "case_id": "17000206",
+          "exact": true,
+          "score": 1.0,
+          "terminal_status": "succeeded"
+        },
+        {
+          "case_id": "17000228",
+          "exact": true,
+          "score": 1.0,
+          "terminal_status": "succeeded"
+        },
+        {
+          "case_id": "17000255",
+          "exact": true,
+          "score": 1.0,
+          "terminal_status": "succeeded"
+        },
+        {
+          "case_id": "17000245",
+          "exact": true,
+          "score": 1.0,
+          "terminal_status": "succeeded"
+        },
+        {
+          "case_id": "17000233",
+          "exact": true,
+          "score": 1.0,
+          "terminal_status": "succeeded"
+        },
+        {
+          "case_id": "17000251",
+          "exact": true,
+          "score": 1.0,
+          "terminal_status": "succeeded"
+        },
+        {
+          "case_id": "17000252",
+          "exact": false,
+          "score": 0.0,
+          "terminal_status": "succeeded"
+        }
+      ],
+      "exact_hits": 7,
+      "mean_score": 0.875
+    }
+  }
+}

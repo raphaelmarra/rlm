@@ -28,6 +28,8 @@
 </p>
 
 ## Overview
+
+> **Codex CLI evaluation:** this fork includes a reproducible OOLONG benchmark of RLM over a Codex subscription. The partial run showed a preliminary quality signal but a large calls/latency/token penalty, so we do **not** recommend it as a generic CLI layer for this workload. Read the [full partial verdict](benchmarks/oolong_codex/reports/2026-08-12-partial-verdict.md) and the [benchmark code](benchmarks/oolong_codex/).
 Recursive Language Models (RLMs) are a task-agnostic inference paradigm for language models (LMs) to handle near-infinite length contexts by enabling the LM to *programmatically* examine, decompose, and recursively call itself over its input. RLMs replace the canonical `llm.completion(prompt, model)` call with a `rlm.completion(prompt, model)` call, acting as a "language model". RLMs offload the context as a variable in a REPL environment that the LM can interact with and launch sub-LM calls inside of.
 
 RLMs are a bet on future "language model" design choices. We argue for a [CodeAct](https://arxiv.org/abs/2402.01030)-style harness (i.e. all language models should have access to a code environment) with sub-(R)LM calls as functions in code, and context / prompts as objects in code. RLMs explicitly defer code execution with sub-calls as functions to the language model itself, which is incredibly flexible and lends itself well to scale if trained correctly. We want to move away from the JSON tool-calling standard for both sub-agents and generic tool calls. The naming comes from the fact that such a system is itself a "language model" (a probabilistic mapping from text to text) that builds around and relies on recursive sub-LLM calls.

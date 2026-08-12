@@ -13,6 +13,7 @@ necessários ao backend e à ferramenta Codex.
 | Testes da ferramenta | `tests/codex_tool/` | Existente |
 | Testes reais opt-in | `tests/live/` | Smoke direto existente; smokes locais especificados |
 | Benchmark e veredito Codex CLI | `benchmarks/oolong_codex/` | Harness, configuração, testes e relatórios reproduzíveis; dados brutos ficam ignorados em `artifacts/` |
+| Relatório canônico | `benchmarks/oolong_codex/reports/` | JSON e Markdown versionados; métricas e limites da avaliação parcial |
 | Exemplo seguro | `examples/codex_subscription.py` | Existente |
 | Skill versionada | `.agents/skills/usar-rlm/` | Implementada e instalada no perfil |
 | Instalador local | `scripts/install_codex_tool.ps1` | Implementado e testado |

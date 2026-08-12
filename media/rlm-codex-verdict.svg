@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 320" role="img" aria-labelledby="title desc">
+  <title id="title">RLM Codex benchmark verdict</title>
+  <desc id="desc">A recursive loop crossed out beside a direct arrow, representing the benchmark verdict.</desc>
+  <rect width="960" height="320" rx="40" fill="#111827"/>
+  <circle cx="160" cy="160" r="92" fill="none" stroke="#f59e0b" stroke-width="18"/>
+  <path d="M160 68a92 92 0 0 1 78 43M238 209a92 92 0 0 1-78 43M82 209a92 92 0 0 1-34-72" fill="none" stroke="#f59e0b" stroke-width="18" stroke-linecap="round"/>
+  <path d="m109 211 103-103" stroke="#ef4444" stroke-width="22" stroke-linecap="round"/>
+  <path d="M310 160h230" stroke="#e5e7eb" stroke-width="16" stroke-linecap="round"/>
+  <path d="m510 112 48 48-48 48" fill="none" stroke="#e5e7eb" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="610" y="145" fill="#f9fafb" font-family="Arial, sans-serif" font-size="42" font-weight="700">RLM × CODEX</text>
+  <text x="610" y="198" fill="#f59e0b" font-family="Arial, sans-serif" font-size="30" font-weight="700">BENCHMARK VERDICT</text>
+</svg>

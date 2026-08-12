@@ -10,8 +10,8 @@
 | 5 | RLM local ponta a ponta | Concluída | trajetória raiz+subconsulta comprovada sem Docker e sem processo residual |
 | 6 | Uso pelo Codex da sessão atual | Concluída | o agente invocou RLM pelo shell e usou a resposta para aprovar a POC |
 | 7 | Portabilidade para outro Codex | Planejada | processo novo fora do checkout descobre a skill e opera a CLI |
-| 8 | Benchmark OOLONG do RLM | Em execução | 25 casos oficiais, baseline e candidato avaliados com protocolo congelado |
-| 9 | Decisão de continuidade | Planejada | ganho, consumo e latência documentados |
+| 8 | Benchmark OOLONG do RLM | Concluída (parcial) | baseline 25/25; RLM 8 sucessos, 1 falha e 16 não iniciados, com relatório canônico |
+| 9 | Decisão de continuidade | Concluída | sinal de qualidade inconclusivo; penalidade operacional não compensa para CLI genérica |
 
 Estados válidos: `Planejada`, `Em execução`, `Bloqueada`, `Concluída`.
 

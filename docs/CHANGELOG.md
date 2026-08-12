@@ -43,6 +43,13 @@ Todas as mudanças relevantes deste fork serão registradas aqui.
 
 ### Verificado
 
+- Benchmark OOLONG Codex parcial publicado: 8 pares RLM concluídos e 1 falha após
+  baseline 25/25; RLM marcou 7/8 contra 6/8 do direto, mas custou 18,6× mais
+  chamadas, 13,2× mais tempo, 2,7× mais entrada e 56,6× mais saída. Ver o
+  relatório em `benchmarks/oolong_codex/reports/2026-08-12-partial-verdict.md`.
+- ADR 0005 registra que o ganho preliminar não compensa como camada CLI genérica
+  sobre Codex neste cenário.
+
 - Baseline upstream: `271` testes passaram e `63` foram ignorados.
 - Codex CLI e SDK reconhecem autenticação pela conta ChatGPT.
 - Smoke real do SDK retornou `RLM_CODEX_OK` usando a assinatura ChatGPT.
