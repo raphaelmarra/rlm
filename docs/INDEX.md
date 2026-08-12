@@ -14,6 +14,7 @@ Este índice separa a documentação específica do fork da documentação upstr
 | `docs/SOURCES.md` | Fontes externas utilizadas | Referência |
 | `docs/DESCARTADO.md` | Questões e caminhos retirados, com justificativa | Referência |
 | `docs/superpowers/specs/2026-08-12-rlm-codex-local-execution-design.md` | Spec vigente da CLI, skill, backend Codex e worker local confiável | Explicação |
+| `docs/superpowers/specs/2026-08-12-oolong-codex-benchmark-design.md` | Protocolo do benchmark oficial OOLONG, baseline versus RLM em 50 casos | Explicação |
 | `docs/superpowers/specs/2026-08-12-codex-subscription-backend-design.md` | Spec histórica substituída pela execução local | Explicação |
 | `docs/superpowers/specs/2026-08-12-rlm-tool-for-codex-design.md` | Spec histórica substituída pela execução local | Explicação |
 | `docs/superpowers/plans/README.md` | Convenção dos planos executáveis | Referência |
