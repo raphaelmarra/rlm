@@ -2,7 +2,7 @@
 
 **Estado:** Aprovada para implementação<br>
 **Data:** 2026-08-12<br>
-**Decisão:** ADR 0003<br>
+**Decisões:** ADR 0003 e ADR 0004<br>
 **Substitui:** `docs/superpowers/specs/2026-08-12-codex-subscription-backend-design.md`
 e `docs/superpowers/specs/2026-08-12-rlm-tool-for-codex-design.md` como definição
 operacional vigente
@@ -24,6 +24,18 @@ segurança: Python gerado pelo modelo executará com as permissões do usuário 
 iniciou a CLI. O usuário aprovou explicitamente esse modo de execução local
 confiável em 2026-08-12.
 
+## Objetivo central
+
+> Entregar ao próprio Codex uma capacidade RLM auxiliar, opcional e descoberta por
+> skill, que o agente possa invocar pela sua ferramenta de shell durante a sessão
+> atual, sem Docker, WSL 2, MCP, reinicialização ou orquestração manual do
+> usuário; a resposta do RLM deve voltar ao mesmo agente e ser usada para facilitar
+> a tarefa original, com prova real e todos os gates verdes.
+
+O produto não é “uma CLI para o usuário operar”. O produto é uma capacidade do
+Codex. A CLI é somente o adaptador executável e testável entre o shell que o Codex
+já possui e o RLM.
+
 ## Objetivos
 
 1. Tornar o RLM utilizável pelo Codex de qualquer diretório com autenticação da
@@ -38,6 +50,8 @@ confiável em 2026-08-12.
    persistência e cancelamento.
 7. Descrever honestamente a fronteira de confiança e evitar qualquer alegação de
    sandbox ou isolamento do host.
+8. Provar que o Codex da sessão atual consegue decidir usar o RLM, invocá-lo e
+   aproveitar sua resposta sem abandonar essa sessão.
 
 ## Fora do escopo
 
@@ -46,6 +60,7 @@ confiável em 2026-08-12.
 - restringir o Python local como se fosse uma sandbox;
 - remover o `DockerREPL` genérico do projeto upstream;
 - substituir trabalhos duráveis por um comando síncrono `ask`;
+- adicionar um atalho síncrono `run` antes de uso real demonstrar essa necessidade;
 - aceitar API key paga ou autenticação diferente de `chatgpt`;
 - prometer que RLM melhora toda tarefa sem benchmark controlado.
 
@@ -58,6 +73,10 @@ e pode ser combinada com as ferramentas normais do agente. A skill registra quan
 usar o RLM, qual comando executar primeiro e como acompanhar o mesmo `run-id`.
 Essa combinação é a menor superfície que satisfaz descoberta, execução e
 recuperação.
+
+O shell já é uma ferramenta do Codex. Portanto não é necessário transformar a CLI
+em uma nova categoria de ferramenta para que o agente a use: quando a skill é
+ativada, o Codex chama `rlm-codex` pelo shell como chama `git`, `rg` ou testes.
 
 ### MCP fino sobre o gerenciador — adiado
 
@@ -74,12 +93,48 @@ Eliminar o Python gerado reduziria o risco, mas mudaria a semântica central do 
 o modelo deixaria de explorar programaticamente o contexto. Essa alternativa não
 entrega o sistema solicitado.
 
+### Atalho síncrono `run` — adiado
+
+O agente já consegue compor `start` com `result --wait`, preservando `run-id`,
+cancelamento e recuperação. Um novo comando só será criado se o uso real nesta
+sessão revelar atrito material. Isso evita ampliar a superfície antes da prova.
+
+## Como o Codex descobre e usa a capacidade
+
+Cada camada tem uma responsabilidade única:
+
+| Camada | Responsabilidade |
+|---|---|
+| descrição da skill | permanecer no contexto inicial e permitir ativação implícita ou por `$usar-rlm` |
+| corpo da skill | decidir quando RLM agrega valor e ensinar o fluxo mínimo |
+| shell do Codex | invocar o executável disponível no `PATH` e ler seu JSON |
+| `rlm-codex` | validar, iniciar, observar e persistir o trabalho |
+| worker local | executar RLM e `LocalREPL` fora do processo chamador |
+| Codex da sessão atual | interpretar a resposta RLM e continuar a tarefa original |
+
+O fluxo normal da skill será:
+
+1. Usar RLM apenas para corpus grande, busca ampla, decomposição ou subconsultas;
+   tarefas diretas continuam no Codex da sessão atual.
+2. Rodar `doctor` antes do primeiro uso da sessão atual. Reutilizar o diagnóstico
+   enquanto instalação e ambiente não mudarem.
+3. Rodar `start` uma vez, preservar o `run-id` e chamar `result --wait`.
+4. Consultar `status` ou `events` somente para acompanhar demora ou diagnosticar
+   comportamento; não obrigar o caminho feliz a emitir comandos desnecessários.
+5. Incorporar a resposta ao raciocínio da tarefa, identificando-a como resposta do
+   RLM quando isso for relevante.
+
+A instalação editável da CLI e a skill já visível na sessão atual permitem atualizar
+e testar esse fluxo sem reiniciar o Codex. Uma sessão nova continua sendo necessária
+apenas como prova adicional de portabilidade e descoberta, não como requisito para
+o uso normal.
+
 ## Arquitetura
 
 ```text
-Codex
+Codex da sessão atual
   |
-  +--> skill $usar-rlm
+  +--> skill $usar-rlm --> ferramenta de shell
           |
           +--> rlm-codex doctor/start/status/events/result/cancel/list/prune
                     |
@@ -121,22 +176,25 @@ atinge somente o caminho `rlm-codex` e seus exemplos, documentação e testes.
 
 ## Fluxo de dados
 
-1. O agente executa `rlm-codex doctor`.
-2. `doctor` valida Python, pacote, SDK, ausência de API key, conta ChatGPT,
+1. A descrição da skill combina com a tarefa ou o agente recebe `$usar-rlm` de forma
+   explícita.
+2. A skill orienta o Codex da sessão atual a executar `rlm-codex doctor` pelo shell.
+3. `doctor` valida Python, pacote, SDK, ausência de API key, conta ChatGPT,
    diretório de estado e integridade da skill. Um check positivo `execution_mode`
    informa `local trusted execution; not sandboxed`.
-3. `start` valida pergunta, limites e contexto antes de criar qualquer processo.
-4. Os arquivos de entrada são lidos uma vez e copiados para `context.json`, com
+4. `start` valida pergunta, limites e contexto antes de criar qualquer processo.
+5. Os arquivos de entrada são lidos uma vez e copiados para `context.json`, com
    nomes, tamanhos e hashes em `request.json`.
-5. `JobManager` inicia um worker local em novo grupo de processos e devolve o `run-id`.
-6. O worker local cria o RLM com `environment="local"`, `max_depth=1`, uma subconsulta
+6. `JobManager` inicia um worker local em novo grupo de processos e devolve o `run-id`.
+7. O worker local cria o RLM com `environment="local"`, `max_depth=1`, uma subconsulta
    concorrente no máximo e esforço `medium`.
-7. O `LocalREPL` executa os blocos Python no worker e encaminha `llm_query` ao
+8. O `LocalREPL` executa os blocos Python no worker e encaminha `llm_query` ao
    `LMHandler`, que usa `CodexClient` e a conta ChatGPT.
-8. Callbacks registram iterações e subconsultas em `events.jsonl`; heartbeat e
+9. Callbacks registram iterações e subconsultas em `events.jsonl`; heartbeat e
    estado ficam recuperáveis por outro processo.
-9. O resultado terminal é gravado antes de o worker local encerrar. A CLI apenas lê e
-   serializa o estado persistido.
+10. O resultado terminal é gravado antes de o worker local encerrar. A CLI lê e
+    serializa o estado persistido; o Codex da sessão atual usa a resposta e
+    continua a tarefa que motivou a chamada.
 
 O snapshot evita depender de alterações posteriores nos arquivos de entrada. Ele
 não impede o Python gerado de acessar outros arquivos do host.
@@ -208,7 +266,10 @@ ações com as permissões do usuário.
    sem processo residual.
 4. Um processo novo do Codex, iniciado fora do checkout, usa `$usar-rlm`, preserva
    um único `run-id` e recupera a resposta correta.
-5. O diretório de teste é comparado antes e depois para detectar escrita não
+5. Antes da prova externa, o Codex da sessão atual usa a skill e a CLI em uma tarefa
+   não trivial e demonstra como a resposta RLM alterou ou
+   confirmou seu trabalho subsequente.
+6. O diretório de teste é comparado antes e depois para detectar escrita não
    esperada; isso é uma prova do caso testado, não uma garantia de sandbox.
 
 Testes reais exigem `RLM_LIVE_CODEX=1` e ausência de `OPENAI_API_KEY`. Não haverá
@@ -229,7 +290,7 @@ O sistema estará concluído somente quando evidência recente provar todos os i
 
 1. `rlm-codex` resolve pelo `PATH` fora do checkout.
 2. `doctor` retorna `ok=true`, conta `chatgpt`, skill sincronizada e execução local
-   confiável explícito, sem qualquer requisito Docker/WSL.
+   confiável explícita, sem qualquer requisito Docker/WSL.
 3. `OPENAI_API_KEY` presente bloqueia `doctor` e `start` antes de inferência.
 4. Ruff, formatação, pre-commit, `ty` e todos os testes determinísticos passam.
 5. O smoke direto do `CodexClient` passa pela assinatura ChatGPT.
@@ -238,16 +299,19 @@ O sistema estará concluído somente quando evidência recente provar todos os i
    limpeza sem processo residual.
 8. Um Codex novo fora do checkout ativa `$usar-rlm` e obtém sozinho a resposta
    correta sem duplicar o trabalho.
-9. O benchmark `1 x 1` separa funcionamento da CLI do ganho incremental da skill.
-10. Fixture, logs, resultados e diff não contêm segredo, token ou e-mail privado.
-11. Nenhum arquivo do projeto usado no smoke é alterado; o relatório reconhece que
+9. O Codex da sessão atual ativa a capacidade por decisão própria ou menção explícita,
+   chama a CLI pelo shell, recupera o resultado e o usa na tarefa original.
+10. O benchmark `1 x 1` separa funcionamento da CLI do ganho incremental da skill.
+11. Fixture, logs, resultados e diff não contêm segredo, token ou e-mail privado.
+12. Nenhum arquivo do projeto usado no smoke é alterado; o relatório reconhece que
     essa evidência não equivale a isolamento.
-12. Código, skill, documentação, decisão, plano e evidências estão versionados e
+13. Código, skill, documentação, decisão, plano e evidências estão versionados e
     coerentes entre si.
 
 ## Garantia honesta
 
-“Funcional” significa que um agente novo descobre a skill, opera a CLI durável e
-recebe uma resposta RLM real usando a assinatura ChatGPT, com testes e trajetória
-auditáveis. Não significa que Python gerado seja seguro contra entradas hostis nem
-que RLM produza respostas melhores em toda tarefa.
+“Funcional” significa primeiro que o Codex da sessão atual consegue escolher,
+invocar e aproveitar o RLM como capacidade auxiliar; significa também que um agente
+novo descobre a mesma skill e reproduz o fluxo. Ambas as provas usam a assinatura
+ChatGPT e produzem trajetória auditável. Não significa que Python gerado seja seguro
+contra entradas hostis nem que RLM produza respostas melhores em toda tarefa.

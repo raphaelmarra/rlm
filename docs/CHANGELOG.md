@@ -23,6 +23,8 @@ Todas as mudanças relevantes deste fork serão registradas aqui.
 - Spec e ADR da arquitetura local confiável, preservando CLI, skill e trabalhos
   duráveis sem exigir Docker ou WSL 2.
 - Auditoria da spec local, com `15 PASSA` e `0 FALHA`.
+- Objetivo central e ADR de uso na sessão atual: a skill decide, o shell do Codex
+  invoca a CLI e a resposta RLM retorna ao mesmo agente.
 
 ### Alterado
 
