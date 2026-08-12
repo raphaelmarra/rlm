@@ -20,6 +20,15 @@ Todas as mudanças relevantes deste fork serão registradas aqui.
 - Isolamento Docker por run com rede interna, usuário sem privilégio, limites e limpeza por rótulo.
 - Skill `$usar-rlm`, referência operacional e instalador global idempotente com manifesto de origem.
 - Diagnóstico de integridade da skill por commit e hashes SHA-256.
+- Spec e ADR da arquitetura local confiável, preservando CLI, skill e trabalhos
+  duráveis sem exigir Docker ou WSL 2.
+- Auditoria da spec local, com `15 PASSA` e `0 FALHA`.
+
+### Alterado
+
+- A decisão vigente troca `DockerREPL` por `LocalREPL` no worker `rlm-codex` e
+  explicita que o worker local não constitui sandbox.
+- As specs, ADRs e o plano Docker foram preservados como histórico substituído.
 
 ### Verificado
 
@@ -33,4 +42,5 @@ Todas as mudanças relevantes deste fork serão registradas aqui.
 
 ### Limitação conhecida
 
-- Docker não está instalado; o smoke RLM isolado permanece bloqueado.
+- Python gerado pelo RLM local terá as permissões do usuário que iniciar a CLI;
+  corpus não confiável não deve ser usado.

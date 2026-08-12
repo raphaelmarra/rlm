@@ -12,17 +12,21 @@ Este índice separa a documentação específica do fork da documentação upstr
 | `docs/DECISOES.md` | Log das decisões arquiteturais | Referência |
 | `docs/ABERTO.md` | Dependências e questões ainda abertas | Referência |
 | `docs/SOURCES.md` | Fontes externas utilizadas | Referência |
-| `docs/superpowers/specs/2026-08-12-codex-subscription-backend-design.md` | Spec do backend Codex por assinatura | Explicação |
-| `docs/superpowers/specs/2026-08-12-rlm-tool-for-codex-design.md` | Spec da CLI e skill que tornam o RLM controlável pelo Codex | Explicação |
+| `docs/DESCARTADO.md` | Questões e caminhos retirados, com justificativa | Referência |
+| `docs/superpowers/specs/2026-08-12-rlm-codex-local-execution-design.md` | Spec vigente da CLI, skill, backend Codex e worker local confiável | Explicação |
+| `docs/superpowers/specs/2026-08-12-codex-subscription-backend-design.md` | Spec histórica substituída pela execução local | Explicação |
+| `docs/superpowers/specs/2026-08-12-rlm-tool-for-codex-design.md` | Spec histórica substituída pela execução local | Explicação |
 | `docs/superpowers/plans/README.md` | Convenção dos planos executáveis | Referência |
-| `docs/superpowers/plans/2026-08-12-rlm-codex-implementation.md` | Plano TDD do backend, CLI, Docker e skill | How-to |
-| `docs/decisions/0001-sdk-codex-como-backend-de-assinatura.md` | Escolha do SDK e do isolamento | Explicação |
-| `docs/decisions/0002-cli-global-e-skill-como-superficie-do-codex.md` | Escolha da CLI global e da skill companheira | Explicação |
+| `docs/superpowers/plans/2026-08-12-rlm-codex-implementation.md` | Plano histórico da implementação Docker, substituído | How-to |
+| `docs/decisions/0001-sdk-codex-como-backend-de-assinatura.md` | Decisão histórica do backend e Docker, substituída por `0003` | Explicação |
+| `docs/decisions/0002-cli-global-e-skill-como-superficie-do-codex.md` | Decisão histórica da CLI/skill com Docker, substituída por `0003` | Explicação |
+| `docs/decisions/0003-cli-skill-e-worker-local-confiavel.md` | Decisão vigente: CLI + skill + worker local confiável | Explicação |
 | `.agents/skills/usar-rlm/SKILL.md` | Fluxo operacional do Codex para runs RLM extensos | How-to |
 | `.agents/skills/usar-rlm/references/protocol.md` | Contrato JSON, estados e códigos da CLI `rlm-codex` | Referência |
 | `docs/reviews/2026-08-12-codex-subscription-backend-spec-audit.md` | Auditoria de coerência e coesão da spec | Referência |
 | `docs/reviews/2026-08-12-rlm-tool-for-codex-spec-audit.md` | Auditoria de coerência e coesão da spec da ferramenta | Referência |
 | `docs/reviews/2026-08-12-rlm-codex-plan-audit.md` | Auditoria de coerência e coesão do plano executável | Referência |
+| `docs/reviews/2026-08-12-rlm-codex-local-execution-spec-audit.md` | Auditoria da spec local vigente, com 15 critérios | Referência |
 
 ## Documentação upstream
 
@@ -35,6 +39,5 @@ Este índice separa a documentação específica do fork da documentação upstr
 | `docs/api/rlm.md` | API pública upstream |
 | `docs/src/` | Site da documentação upstream |
 
-O plano de implementação da ferramenta está versionado em
-`docs/superpowers/plans/2026-08-12-rlm-codex-implementation.md` e mantém
-rastreabilidade com as duas specs.
+O plano Docker permanece como registro histórico. Um plano local será escrito a
+partir da spec vigente depois do gate de revisão humana.

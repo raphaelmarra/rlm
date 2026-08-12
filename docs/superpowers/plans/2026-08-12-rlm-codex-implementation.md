@@ -1,5 +1,10 @@
 # RLM–Codex Implementation Plan
 
+> **Estado:** substituído pelo desenho local aprovado em
+> `docs/superpowers/specs/2026-08-12-rlm-codex-local-execution-design.md`. Este
+> arquivo permanece como registro da implementação Docker já realizada; não é o
+> plano vigente.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Entregar `rlm-codex` como ferramenta global que o Codex usa para executar,
@@ -567,7 +572,7 @@ git commit -m "feat: install RLM skill for Codex"
 - Produces: prova de iteração raiz, `llm_query`, resposta correta, uso sem custo monetário,
 trajetória, limpeza de worker/container/rede e nenhum write no projeto.
 
-- [ ] **Step 1: Escrever smokes opt-in e confirmar skip sem variáveis**
+- [x] **Step 1: Escrever smokes opt-in e confirmar skip sem variáveis**
 
 Run: `uv run pytest tests/live/test_rlm_codex_docker.py tests/live/test_rlm_codex_cli.py -q`
 

@@ -1,6 +1,6 @@
 # Recursive Language Models (RLM) como ferramenta controlada pelo Codex
 
-**Estado:** Aprovada para implementação<br>
+**Estado:** Substituída por `docs/superpowers/specs/2026-08-12-rlm-codex-local-execution-design.md`<br>
 **Data:** 2026-08-12<br>
 **Repositório:** `raphaelmarra/rlm`<br>
 **Branch:** `feat/codex-subscription-backend`

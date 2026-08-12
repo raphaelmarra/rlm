@@ -1,6 +1,4 @@
 # Questões abertas
 
-| ID | Questão | Gate |
-|---|---|---|
-| Q-002 | A instalação do WSL 2 exigirá reinicialização desta máquina? | Antes do smoke RLM ponta a ponta |
-| Q-003 | O Docker Desktop exigirá aceite ou onboarding interativo após a instalação? | Antes do smoke RLM ponta a ponta |
+Não há questão aberta que bloqueie a implementação do desenho vigente. As questões
+de WSL 2 e Docker foram retiradas pelo ADR 0003 e preservadas em `docs/DESCARTADO.md`.

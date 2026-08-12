@@ -2,5 +2,6 @@
 
 | ADR | Estado | Decisão |
 |---|---|---|
-| `0001` | Aceita | Usar o SDK oficial do Codex como backend opcional, somente com autenticação ChatGPT e RLM isolado em Docker |
-| `0002` | Aceita | Expor o RLM ao Codex por CLI global com protocolo JSON e skill companheira; MCP fica adiado |
+| `0001` | Substituída por `0003` | SDK Codex e isolamento Docker como primeira arquitetura |
+| `0002` | Substituída por `0003` | CLI global, skill companheira e worker Docker |
+| `0003` | Aceita | Manter SDK Codex, CLI e skill; executar o RLM em worker local confiável, sem Docker; MCP fica adiado |

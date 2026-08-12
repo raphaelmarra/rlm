@@ -1,5 +1,6 @@
 ---
-status: accepted
+status: superseded
+superseded-by: 0003
 date: 2026-08-12
 deciders:
   - usuário
