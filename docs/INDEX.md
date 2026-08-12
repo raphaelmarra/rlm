@@ -18,6 +18,7 @@ Este índice separa a documentação específica do fork da documentação upstr
 | `docs/superpowers/specs/2026-08-12-rlm-tool-for-codex-design.md` | Spec histórica substituída pela execução local | Explicação |
 | `docs/superpowers/plans/README.md` | Convenção dos planos executáveis | Referência |
 | `docs/superpowers/plans/2026-08-12-rlm-codex-implementation.md` | Plano histórico da implementação Docker, substituído | How-to |
+| `docs/superpowers/plans/2026-08-12-rlm-codex-local-execution.md` | Plano TDD vigente da execução local e das provas pelo Codex | How-to |
 | `docs/decisions/0001-sdk-codex-como-backend-de-assinatura.md` | Decisão histórica do backend e Docker, substituída por `0003` | Explicação |
 | `docs/decisions/0002-cli-global-e-skill-como-superficie-do-codex.md` | Decisão histórica da CLI/skill com Docker, substituída por `0003` | Explicação |
 | `docs/decisions/0003-cli-skill-e-worker-local-confiavel.md` | Decisão vigente: CLI + skill + worker local confiável | Explicação |
@@ -40,5 +41,5 @@ Este índice separa a documentação específica do fork da documentação upstr
 | `docs/api/rlm.md` | API pública upstream |
 | `docs/src/` | Site da documentação upstream |
 
-O plano Docker permanece como registro histórico. Um plano local será escrito a
-partir da spec vigente depois do gate de revisão humana.
+O plano Docker permanece como registro histórico. A implementação vigente segue o
+plano local derivado da spec aprovada.

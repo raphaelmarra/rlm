@@ -25,6 +25,8 @@ Todas as mudanças relevantes deste fork serão registradas aqui.
 - Auditoria da spec local, com `15 PASSA` e `0 FALHA`.
 - Objetivo central e ADR de uso na sessão atual: a skill decide, o shell do Codex
   invoca a CLI e a resposta RLM retorna ao mesmo agente.
+- Plano TDD da execução local, incluindo smokes reais, auto-uso pelo Codex,
+  portabilidade, benchmark controlado e fechamento dos treze critérios de aceite.
 
 ### Alterado
 
