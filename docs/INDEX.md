@@ -18,6 +18,8 @@ Este índice separa a documentação específica do fork da documentação upstr
 | `docs/superpowers/plans/2026-08-12-rlm-codex-implementation.md` | Plano TDD do backend, CLI, Docker e skill | How-to |
 | `docs/decisions/0001-sdk-codex-como-backend-de-assinatura.md` | Escolha do SDK e do isolamento | Explicação |
 | `docs/decisions/0002-cli-global-e-skill-como-superficie-do-codex.md` | Escolha da CLI global e da skill companheira | Explicação |
+| `.agents/skills/usar-rlm/SKILL.md` | Fluxo operacional do Codex para runs RLM extensos | How-to |
+| `.agents/skills/usar-rlm/references/protocol.md` | Contrato JSON, estados e códigos da CLI `rlm-codex` | Referência |
 | `docs/reviews/2026-08-12-codex-subscription-backend-spec-audit.md` | Auditoria de coerência e coesão da spec | Referência |
 | `docs/reviews/2026-08-12-rlm-tool-for-codex-spec-audit.md` | Auditoria de coerência e coesão da spec da ferramenta | Referência |
 | `docs/reviews/2026-08-12-rlm-codex-plan-audit.md` | Auditoria de coerência e coesão do plano executável | Referência |

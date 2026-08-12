@@ -505,11 +505,11 @@ git commit -m "feat: isolate RLM Docker jobs"
 - Produces: skill de repositório e cópia de usuário em `$HOME/.agents/skills/usar-rlm`.
 - Produces: manifesto de origem com commit e hashes para o `doctor` detectar drift.
 
-- [ ] **Step 1: Ler integralmente `skill-creator` e `writing-skills` antes do artefato**
+- [x] **Step 1: Ler integralmente `skill-creator` e `writing-skills` antes do artefato**
 
 Run: validação manual das instruções dessas duas skills no início da task.
 
-- [ ] **Step 2: Escrever teste RED de frontmatter, gatilhos e comandos**
+- [x] **Step 2: Escrever teste RED de frontmatter, gatilhos e comandos**
 
 ```python
 def test_skill_has_portable_commands_and_no_absolute_paths():
@@ -524,13 +524,13 @@ Run: `uv run pytest tests/codex_tool/test_skill.py -q`
 
 Expected: FAIL porque a skill ainda não existe.
 
-- [ ] **Step 3: Criar skill curta com fluxo obrigatório e limites de disparo**
+- [x] **Step 3: Criar skill curta com fluxo obrigatório e limites de disparo**
 
 A descrição dispara para corpus grande, busca em muitos arquivos, decomposição e pedido
 explícito; exclui perguntas simples. O corpo exige `doctor`, start único, observação,
 resultado, relato de trajetória e cancelamento somente nas condições da spec.
 
-- [ ] **Step 4: Criar instalador idempotente e teste de drift**
+- [x] **Step 4: Criar instalador idempotente e teste de drift**
 
 Run: `powershell -ExecutionPolicy Bypass -File scripts/install_codex_tool.ps1 -WhatIf`
 
@@ -538,7 +538,7 @@ Run: `uv run pytest tests/codex_tool/test_skill.py -q`
 
 Expected: PASS sem alterar diretórios fora dos temporários de teste.
 
-- [ ] **Step 5: Instalar CLI e skill no perfil real**
+- [x] **Step 5: Instalar CLI e skill no perfil real**
 
 Run: `powershell -ExecutionPolicy Bypass -File scripts/install_codex_tool.ps1`
 
@@ -547,7 +547,7 @@ Run: `Push-Location $env:TEMP; rlm-codex doctor; Pop-Location`
 Expected: comando resolvido fora do fork e skill sincronizada; Docker é o único preflight
 admitido como indisponível antes da Task 9.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add .agents/skills/usar-rlm scripts/install_codex_tool.ps1 tests/codex_tool/test_skill.py rlm/codex_tool/cli.py

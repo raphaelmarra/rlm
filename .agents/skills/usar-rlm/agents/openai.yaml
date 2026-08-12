@@ -1,0 +1,4 @@
+interface:
+  display_name: "Usar RLM"
+  short_description: "Decompõe tarefas extensas com RLM"
+  default_prompt: "Use $usar-rlm para analisar este corpus extenso e entregar a resposta com trajetória e uso."

@@ -1,4 +1,5 @@
 import argparse
+import hashlib
 import importlib.metadata
 import json
 import os
@@ -39,6 +40,9 @@ EXIT_NOT_FOUND = 4
 EXIT_CONFLICT = 5
 EXIT_WORKER_FAILED = 10
 DURATION_PATTERN = re.compile(r"^(\d+(?:\.\d+)?)([smhd])$")
+SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+COMMIT_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+SKILL_MANIFEST_NAME = ".rlm-codex-origin.json"
 
 
 class ArgumentParsingError(ValueError):
@@ -253,6 +257,67 @@ def diagnostic(name: str, ok: bool, message: str) -> dict[str, Any]:
     return {"name": name, "ok": ok, "message": sanitize_message(message)}
 
 
+def skill_file_hashes(skill_directory: Path) -> dict[str, str]:
+    hashes: dict[str, str] = {}
+    for path in sorted(skill_directory.rglob("*")):
+        if not path.is_file() or path.name == SKILL_MANIFEST_NAME:
+            continue
+        if path.is_symlink():
+            raise ValueError("Skill installation must not contain symbolic links")
+        relative_path = path.relative_to(skill_directory).as_posix()
+        hashes[relative_path] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return hashes
+
+
+def verify_skill_install(
+    skill_directory: Path,
+    *,
+    source_directory: Path | None = None,
+) -> dict[str, Any]:
+    if not (skill_directory / "SKILL.md").is_file():
+        return diagnostic("skill", False, "usar-rlm skill is not installed")
+    manifest_path = skill_directory / SKILL_MANIFEST_NAME
+    if not manifest_path.is_file():
+        return diagnostic("skill", False, "usar-rlm origin manifest is missing")
+
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if not isinstance(manifest, dict) or manifest.get("schema_version") != "1":
+            raise ValueError("unsupported schema_version")
+        source_commit = manifest.get("source_commit")
+        if not isinstance(source_commit, str) or not COMMIT_PATTERN.fullmatch(source_commit):
+            raise ValueError("invalid source_commit")
+        expected_hashes = manifest.get("files")
+        if not isinstance(expected_hashes, dict) or not expected_hashes:
+            raise ValueError("files must be a non-empty object")
+        if not all(
+            isinstance(path, str)
+            and path
+            and not Path(path).is_absolute()
+            and ".." not in Path(path).parts
+            and isinstance(file_hash, str)
+            and SHA256_PATTERN.fullmatch(file_hash)
+            for path, file_hash in expected_hashes.items()
+        ):
+            raise ValueError("files contains an invalid path or SHA-256")
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as error:
+        return diagnostic("skill", False, f"usar-rlm origin manifest is invalid: {error}")
+
+    try:
+        if skill_file_hashes(skill_directory) != expected_hashes:
+            return diagnostic("skill", False, "usar-rlm installation drift detected")
+        if (
+            source_directory is not None
+            and source_directory.is_dir()
+            and skill_file_hashes(source_directory) != expected_hashes
+        ):
+            return diagnostic("skill", False, "usar-rlm source drift detected; reinstall the skill")
+    except (OSError, ValueError) as error:
+        return diagnostic("skill", False, f"usar-rlm could not be verified: {error}")
+
+    return diagnostic("skill", True, f"usar-rlm skill matches origin {source_commit[:12]}")
+
+
 def run_doctor(paths: CodexPaths | None = None) -> list[dict[str, Any]]:
     selected_paths = paths or CodexPaths.from_environment()
     checks: list[dict[str, Any]] = []
@@ -370,12 +435,12 @@ def run_doctor(paths: CodexPaths | None = None) -> list[dict[str, Any]]:
     except OSError as error:
         checks.append(diagnostic("state_directory", False, str(error)))
 
-    skill = Path.home() / ".agents" / "skills" / "usar-rlm" / "SKILL.md"
+    skill_directory = Path.home() / ".agents" / "skills" / "usar-rlm"
+    source_directory = Path(__file__).resolve().parents[2] / ".agents" / "skills" / "usar-rlm"
     checks.append(
-        diagnostic(
-            "skill",
-            skill.is_file(),
-            "usar-rlm skill is installed" if skill.is_file() else "usar-rlm skill is not installed",
+        verify_skill_install(
+            skill_directory,
+            source_directory=source_directory if source_directory.is_dir() else None,
         )
     )
     return checks
