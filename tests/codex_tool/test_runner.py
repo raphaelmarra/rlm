@@ -67,7 +67,7 @@ class FakeRLM:
         return SimpleNamespace(response="answer")
 
 
-def test_runner_always_builds_docker_rlm() -> None:
+def test_runner_always_builds_local_rlm() -> None:
     instances: list[FakeRLM] = []
 
     def factory(**kwargs: Any) -> FakeRLM:
@@ -80,33 +80,16 @@ def test_runner_always_builds_docker_rlm() -> None:
     instance = instances[0]
     assert result.response == "answer"
     assert instance.kwargs["backend"] == "codex"
-    assert instance.kwargs["environment"] == "docker"
+    assert instance.kwargs["environment"] == "local"
     assert instance.kwargs["max_depth"] == 1
     assert instance.kwargs["max_concurrent_subcalls"] == 1
-    assert instance.kwargs["environment_kwargs"] == {"run_id": None}
+    assert "environment_kwargs" not in instance.kwargs
     assert instance.kwargs["backend_kwargs"] == {
         "model_name": "gpt-5.6-terra",
         "reasoning_effort": "medium",
     }
     assert instance.completion_calls == [({"notes.txt": "alpha beta"}, "Find the answer")]
     assert instance.closed is True
-
-
-def test_runner_passes_run_id_to_docker_environment() -> None:
-    instances: list[FakeRLM] = []
-
-    def factory(**kwargs: Any) -> FakeRLM:
-        instance = FakeRLM(**kwargs)
-        instances.append(instance)
-        return instance
-
-    run_rlm(
-        valid_request(run_id="run-1"),
-        callbacks=Callbacks(),
-        rlm_factory=factory,
-    )
-
-    assert instances[0].kwargs["environment_kwargs"] == {"run_id": "run-1"}
 
 
 def test_snapshot_context_records_hashes_and_exact_content(tmp_path: Path) -> None:
