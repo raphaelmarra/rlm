@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from rlm.codex_tool.cli import main
+from rlm.codex_tool.cli import main, run_doctor
 from rlm.codex_tool.paths import CodexPaths
 from rlm.codex_tool.protocol import RunState, RunStatus, StateConflictError
 from rlm.codex_tool.store import RunStore
@@ -92,6 +92,23 @@ def test_doctor_success() -> None:
     assert result.returncode == 0
     assert result.payload["ok"] is True
     assert result.payload["checks"][0]["ok"] is True
+
+
+def test_doctor_reports_trusted_local_execution_without_docker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    checks = run_doctor(CodexPaths(tmp_path / "state"))
+    by_name = {check["name"]: check for check in checks}
+
+    assert by_name["execution_mode"] == {
+        "name": "execution_mode",
+        "ok": True,
+        "message": "local trusted execution; not sandboxed",
+    }
+    assert not {"docker_command", "docker_daemon", "docker_image", "wsl"} & by_name.keys()
 
 
 def test_start_snapshots_context_and_returns_run(tmp_path: Path) -> None:

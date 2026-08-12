@@ -90,6 +90,7 @@ def run_skill_installer(
     skill_root: Path,
     *arguments: str,
     install_tool: bool = False,
+    skip_verification: bool = True,
     environment: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     installer_arguments = [
@@ -101,8 +102,9 @@ def run_skill_installer(
         str(INSTALLER_PATH),
         "-SkillRoot",
         str(skill_root),
-        "-SkipVerification",
     ]
+    if skip_verification:
+        installer_arguments.append("-SkipVerification")
     if not install_tool:
         installer_arguments.append("-SkipToolInstall")
     installer_arguments.extend(arguments)
@@ -178,3 +180,37 @@ def test_installer_preserves_repository_development_groups(tmp_path: Path) -> No
     assert result.returncode == 0, result.stderr
     invocations = uv_log.read_text(encoding="utf-8").splitlines()
     assert invocations[0] == "sync --extra codex --group dev --group test"
+
+
+def test_installer_verifies_local_doctor_without_invoking_wsl(tmp_path: Path) -> None:
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    wsl_log = tmp_path / "wsl.log"
+    (fake_bin / "uv.cmd").write_text(
+        '@echo off\n@if "%1 %2 %3"=="tool dir --bin" echo %FAKE_BIN%\n@exit /b 0\n',
+        encoding="utf-8",
+    )
+    (fake_bin / "rlm-codex.cmd").write_text(
+        '@echo {"schema_version":"1","ok":true,"command":"doctor",'
+        '"checks":[{"name":"execution_mode","ok":true,'
+        '"message":"local trusted execution; not sandboxed"}]}\n'
+        "@exit /b 0\n",
+        encoding="utf-8",
+    )
+    (fake_bin / "wsl.cmd").write_text(
+        '@echo called>>"%FAKE_WSL_LOG%"\n@exit /b 0\n',
+        encoding="utf-8",
+    )
+    environment = os.environ.copy()
+    environment["FAKE_BIN"] = str(fake_bin)
+    environment["FAKE_WSL_LOG"] = str(wsl_log)
+    environment["PATH"] = str(fake_bin) + os.pathsep + environment["PATH"]
+
+    result = run_skill_installer(
+        tmp_path / "skills",
+        skip_verification=False,
+        environment=environment,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert not wsl_log.exists()

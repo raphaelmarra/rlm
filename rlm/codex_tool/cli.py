@@ -4,8 +4,6 @@ import importlib.metadata
 import json
 import os
 import re
-import shutil
-import subprocess
 import sys
 import tempfile
 import time
@@ -381,51 +379,13 @@ def run_doctor(paths: CodexPaths | None = None) -> list[dict[str, Any]]:
             diagnostic("chatgpt_account", False, "account check skipped until SDK/key is fixed")
         )
 
-    docker_command = shutil.which("docker")
     checks.append(
         diagnostic(
-            "docker_command",
-            docker_command is not None,
-            docker_command or "Docker command not found",
+            "execution_mode",
+            True,
+            "local trusted execution; not sandboxed",
         )
     )
-    if docker_command:
-        daemon = subprocess.run(
-            [docker_command, "version", "--format", "{{.Server.Version}}"],
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        daemon_ok = daemon.returncode == 0 and bool(daemon.stdout.strip())
-        checks.append(
-            diagnostic(
-                "docker_daemon",
-                daemon_ok,
-                f"Docker server {daemon.stdout.strip()}"
-                if daemon_ok
-                else daemon.stderr.strip() or "Docker daemon unavailable",
-            )
-        )
-        image = subprocess.run(
-            [docker_command, "image", "inspect", "python:3.11-slim"],
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        checks.append(
-            diagnostic(
-                "docker_image",
-                image.returncode == 0,
-                "python:3.11-slim is available"
-                if image.returncode == 0
-                else "python:3.11-slim is not available locally",
-            )
-        )
-    else:
-        checks.append(diagnostic("docker_daemon", False, "Docker command is unavailable"))
-        checks.append(diagnostic("docker_image", False, "Docker command is unavailable"))
 
     try:
         selected_paths.ensure()

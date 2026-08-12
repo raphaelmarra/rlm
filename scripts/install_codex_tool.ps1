@@ -140,28 +140,14 @@ if (-not $SkipVerification -and -not $WhatIfPreference) {
     finally {
         Pop-Location
     }
-    if ($doctorExitCode -notin @(0, 3)) {
-        throw "rlm-codex doctor failed with unexpected exit code $doctorExitCode"
+    if ($doctorExitCode -ne 0) {
+        throw "rlm-codex doctor failed with exit code $doctorExitCode"
     }
     $doctor = $doctorOutput | ConvertFrom-Json
-    $allowedFailures = @("docker_command", "docker_daemon", "docker_image")
-    $unexpectedFailures = @($doctor.checks | Where-Object { -not $_.ok -and $_.name -notin $allowedFailures })
-    if ($unexpectedFailures.Count -gt 0) {
-        $failedNames = ($unexpectedFailures | ForEach-Object name) -join ", "
-        throw "rlm-codex doctor reported unexpected failures: $failedNames"
+    $failedChecks = @($doctor.checks | Where-Object { -not $_.ok })
+    if ($failedChecks.Count -gt 0) {
+        $failedNames = ($failedChecks | ForEach-Object name) -join ", "
+        throw "rlm-codex doctor reported failures: $failedNames"
     }
     Write-Output $doctorOutput
-
-    if ($env:OS -eq "Windows_NT") {
-        $wsl = Get-Command "wsl" -ErrorAction SilentlyContinue
-        if ($null -eq $wsl) {
-            Write-Warning "WSL command is unavailable"
-        }
-        else {
-            & $wsl.Source --status
-            if ($LASTEXITCODE -ne 0) {
-                Write-Warning "WSL is installed but not ready"
-            }
-        }
-    }
 }
