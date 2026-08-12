@@ -240,7 +240,7 @@ def follow_events(
     while True:
         events = manager.events(run_id)
         for event in events[emitted:]:
-            stdout.write(json.dumps(event, ensure_ascii=False) + "\n")
+            stdout.write(json.dumps(event, ensure_ascii=True) + "\n")
             stdout.flush()
         emitted = len(events)
         state = manager.status(run_id)
@@ -453,7 +453,7 @@ def main(
         if isinstance(error, (KeyboardInterrupt, SystemExit)):
             raise
         payload, exit_code = error_result(command, error)
-    output.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    output.write(json.dumps(payload, ensure_ascii=True) + "\n")
     output.flush()
     return exit_code
 

@@ -29,6 +29,7 @@ Este índice separa a documentação específica do fork da documentação upstr
 | `docs/reviews/2026-08-12-rlm-tool-for-codex-spec-audit.md` | Auditoria de coerência e coesão da spec da ferramenta | Referência |
 | `docs/reviews/2026-08-12-rlm-codex-plan-audit.md` | Auditoria de coerência e coesão do plano executável | Referência |
 | `docs/reviews/2026-08-12-rlm-codex-local-execution-spec-audit.md` | Auditoria da spec local vigente, com 15 critérios | Referência |
+| `docs/reviews/2026-08-12-rlm-codex-current-session-smoke.md` | Evidência da POC KISS executada pelo Codex da sessão atual | Referência |
 
 ## Documentação upstream
 

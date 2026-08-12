@@ -28,6 +28,16 @@ def test_skill_explains_how_to_locate_durable_run_evidence() -> None:
     assert "runs/<run-id>" in text
 
 
+def test_skill_describes_trusted_local_execution_without_docker() -> None:
+    skill_text = SKILL_PATH.read_text(encoding="utf-8")
+    protocol_text = (SKILL_PATH.parent / "references" / "protocol.md").read_text(encoding="utf-8")
+
+    assert "local trusted execution; not sandboxed" in skill_text
+    assert "Python gerado executa com as permissões do usuário" in skill_text
+    assert "isolado" not in skill_text.lower()
+    assert "Docker" not in protocol_text
+
+
 def write_origin_manifest(skill_directory: Path) -> None:
     files = {
         "SKILL.md": hashlib.sha256((skill_directory / "SKILL.md").read_bytes()).hexdigest(),

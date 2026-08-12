@@ -1,0 +1,6 @@
+{
+  "challenge": "Exercise the trusted local llm_query bridge exactly once.",
+  "child_prompt": "Reply with exactly 7391 and no other text.",
+  "answer_prefix": "RLM-CODEX-",
+  "expected_answer": "RLM-CODEX-7391"
+}

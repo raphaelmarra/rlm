@@ -177,6 +177,45 @@ def test_commands_emit_one_json_object(arguments: list[str], command: str) -> No
     assert result.stdout.count("\n") == 1
 
 
+def legacy_windows_stdout() -> tuple[io.BytesIO, io.TextIOWrapper]:
+    buffer = io.BytesIO()
+    return buffer, io.TextIOWrapper(buffer, encoding="cp1252")
+
+
+def test_json_output_is_safe_for_legacy_windows_console_encoding() -> None:
+    manager = FakeManager()
+    manager.result_value["response"] = "approximately ≈"
+    buffer, stdout = legacy_windows_stdout()
+
+    exit_code = main(["result", "run-1"], stdout=stdout, manager=manager)
+    stdout.flush()
+
+    assert exit_code == 0
+    assert json.loads(buffer.getvalue().decode("cp1252"))["result"]["response"] == (
+        "approximately ≈"
+    )
+
+
+def test_jsonl_output_is_safe_for_legacy_windows_console_encoding() -> None:
+    class TerminalManager(FakeManager):
+        def events(self, run_id):
+            return [{"sequence": 1, "message": "approximately ≈"}]
+
+    manager = TerminalManager()
+    manager.state = manager.state.transition(RunStatus.CANCELLED, pid=None)
+    buffer, stdout = legacy_windows_stdout()
+
+    exit_code = main(
+        ["events", "run-1", "--follow"],
+        stdout=stdout,
+        manager=manager,
+    )
+    stdout.flush()
+
+    assert exit_code == 0
+    assert json.loads(buffer.getvalue().decode("cp1252"))["message"] == "approximately ≈"
+
+
 def test_result_maps_failed_worker_to_exit_ten() -> None:
     manager = FakeManager()
     manager.state = manager.state.transition(RunStatus.RUNNING).transition(RunStatus.FAILED)

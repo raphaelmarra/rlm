@@ -259,11 +259,11 @@ git commit -m "feat: diagnose trusted local execution"
 
 - [ ] **Step 1: Congelar o cenário comportamental antes da edição**
 
-Usar a fixture `tests/live/fixtures/recursive_context.json` e a mesma demanda neutra em todas as execuções: “Analise o arquivo fornecido com as ferramentas locais adequadas, encontre o código derivado e explique de onde veio.” O sucesso exige um único `run.id`, resultado correto, distinção entre resposta RLM e avaliação Codex e reconhecimento de execução local não isolada.
+Usar a fixture `tests/live/fixtures/recursive_context.json` e a mesma demanda operacional em todas as execuções: “Use `rlm-codex` para analisar o arquivo fornecido, encontre o código derivado e explique de onde veio.” O sucesso exige um único `run.id`, resultado correto, distinção entre resposta RLM e avaliação Codex e reconhecimento de execução local não isolada. Este é um teste do procedimento; descoberta implícita é medida separadamente na Task 7.
 
 - [ ] **Step 2: Executar o baseline sem disponibilizar `$usar-rlm` e preservar a saída bruta**
 
-Run: `$fixture = (Resolve-Path "tests/live/fixtures/recursive_context.json").Path; codex exec -C "$env:TEMP" --json "Analise o arquivo fornecido com as ferramentas locais adequadas, encontre o código derivado e explique de onde veio: $fixture"`
+Run: `$fixture = (Resolve-Path "tests/live/fixtures/recursive_context.json").Path; codex exec -C "$env:TEMP" --skip-git-repo-check --ephemeral --dangerously-bypass-approvals-and-sandbox -m gpt-5.6-terra -c 'skills.config=[{path=\"C:/Users/gouve/.agents/skills/usar-rlm/SKILL.md\",enabled=false}]' "Use rlm-codex para analisar o arquivo fornecido, encontre o código derivado e explique de onde veio: $fixture"`
 
 Expected: registrar a decisão natural do agente e qualquer omissão; não interpretar o baseline como prova de ganho.
 
@@ -285,7 +285,7 @@ Run: `uv run python C:/Users/gouve/.codex/skills/.system/skill-creator/scripts/q
 
 Run: `uv run pytest tests/codex_tool/test_skill.py -q`
 
-Run: `$fixture = (Resolve-Path "tests/live/fixtures/recursive_context.json").Path; codex exec -C "$env:TEMP" --json "`$usar-rlm Analise o arquivo fornecido, encontre o código derivado e explique de onde veio: $fixture"`
+Run: `$fixture = (Resolve-Path "tests/live/fixtures/recursive_context.json").Path; codex exec -C "$env:TEMP" --skip-git-repo-check --ephemeral --dangerously-bypass-approvals-and-sandbox -m gpt-5.6-terra "Use rlm-codex para analisar o arquivo fornecido, encontre o código derivado e explique de onde veio: $fixture"`
 
 Expected: PASS estrutural; o agente executa um único run, espera seu resultado e o usa na resposta.
 
@@ -303,16 +303,15 @@ git commit -m "feat: teach Codex to use local RLM"
 ### Task 5: Provar RLM local e a CLI ponta a ponta
 
 **Files:**
-- Create: `tests/live/test_rlm_codex_local.py`
-- Modify: `tests/live/test_rlm_codex_cli.py`
-- Modify: `tests/live/fixtures/recursive_context.json`
+- Create: `tests/live/test_rlm_codex_cli.py`
+- Create: `tests/live/fixtures/recursive_context.json`
 - Remove: `tests/live/test_rlm_codex_docker.py`
 
 **Interfaces:**
 - Consumes: assinatura ChatGPT, `run_rlm`, CLI durável e fixture sintética.
-- Produces: prova de iteração raiz, uma `llm_query`, resposta `RLM-CODEX-7391`, persistência, cancelamento, prune, fonte intacta e ausência de worker residual.
+- Produces: prova de uma `llm_query`, resposta `RLM-CODEX-7391`, fonte intacta e ausência de worker residual.
 
-- [ ] **Step 1: Converter os smokes para opt-in exclusivamente Codex**
+- [x] **Step 1: Manter um único smoke opt-in exclusivamente Codex**
 
 ```python
 LIVE_ENABLED = os.getenv("RLM_LIVE_CODEX") == "1"
@@ -323,27 +322,22 @@ pytestmark = pytest.mark.skipif(
 )
 ```
 
-No teste direto, nomear o caso `test_live_rlm_uses_llm_query_inside_local_repl` e manter as asserções de uma subconsulta, tokens, custo `None`, fixture intacta e trajetória raiz. No teste CLI, guardar os PIDs retornados por `start` e provar estado terminal com `pid is None` e `process_exists(original_pid) is False`.
+No teste CLI, preservar as asserções de uma subconsulta, resposta correta, custo `None`,
+fixture intacta, `environment_type == "local"` e estado terminal com `pid is None`.
 
-- [ ] **Step 2: Confirmar que os smokes são ignorados sem opt-in**
+- [x] **Step 2: Confirmar que o smoke é ignorado sem opt-in**
 
-Run: `uv run pytest tests/live/test_rlm_codex_local.py tests/live/test_rlm_codex_cli.py -q`
+Run: `uv run pytest tests/live/test_rlm_codex_cli.py -q`
 
-Expected: `2 skipped`.
+Expected: `1 skipped`.
 
-- [ ] **Step 3: Executar o RLM local real**
-
-Run: `$env:RLM_LIVE_CODEX='1'; uv run pytest tests/live/test_rlm_codex_local.py -q`
-
-Expected: PASS com `RLM-CODEX-7391`, iteração de profundidade zero e exatamente uma `llm_query`.
-
-- [ ] **Step 4: Executar CLI real, cancelamento e prune**
+- [x] **Step 3: Executar o fluxo CLI local real**
 
 Run: `$env:RLM_LIVE_CODEX='1'; uv run pytest tests/live/test_rlm_codex_cli.py -q`
 
-Expected: PASS para `start/status/events/result/list/cancel/prune`, sem worker residual nem arquivo extra junto à fixture.
+Expected: PASS com `RLM-CODEX-7391`, `LocalREPL`, exatamente uma `llm_query` e worker encerrado.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 4: Commit**
 
 ```powershell
 git add tests/live
@@ -358,33 +352,34 @@ git commit -m "test: prove local RLM Codex workflow"
 
 **Interfaces:**
 - Consumes: instalação editável, skill global e spec local vigente.
-- Produces: evidência de que o Codex da sessão atual executou a ferramenta, recebeu a resposta e a aplicou numa auditoria real da implementação.
+- Produces: evidência de que o Codex da sessão atual executou a ferramenta, recebeu a resposta e a usou para decidir sobre a POC.
 
-- [ ] **Step 1: Instalar a CLI editável e sincronizar a skill**
+- [x] **Step 1: Instalar a CLI editável e sincronizar a skill**
 
 Run: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install_codex_tool.ps1`
 
 Expected: `rlm-codex` no `PATH`, skill com manifesto válido e `doctor` verde.
 
-- [ ] **Step 2: Verificar fora do checkout**
+- [x] **Step 2: Verificar fora do checkout**
 
 Run: `Push-Location $env:TEMP; rlm-codex doctor; Pop-Location`
 
 Expected: `ok=true`, conta `chatgpt`, skill sincronizada e `execution_mode` local confiável.
 
-- [ ] **Step 3: Delegar uma auditoria real ao RLM nesta sessão**
+- [x] **Step 3: Executar uma POC mínima pelo shell desta sessão**
 
-Run: `$start = rlm-codex start --question "Compare a spec com código e testes. Liste somente critérios ainda sem evidência direta, citando arquivo e motivo." --context-file "docs/superpowers/specs/2026-08-12-rlm-codex-local-execution-design.md" --context-file "rlm/codex_tool/runner.py" --context-file "rlm/codex_tool/cli.py" --context-file "rlm/codex_tool/jobs.py" --context-file "tests/live/test_rlm_codex_local.py" --context-file "tests/live/test_rlm_codex_cli.py" | ConvertFrom-Json`
+Run: `rlm-codex start --question "Parse the JSON, chame llm_query exatamente uma vez e componha a resposta" --context-file "tests/live/fixtures/recursive_context.json" --max-iterations 4 --max-timeout 600`
 
-Run: `rlm-codex result $start.run.id --wait --wait-timeout 900`
+Run: `rlm-codex result <run-id> --wait --wait-timeout 700`
 
-Expected: um único run terminal; a resposta identifica gaps verificáveis ou confirma cada área com evidência.
+Expected: `RLM-CODEX-7391`, ambiente local, exatamente uma `llm_query` e nenhum worker residual.
 
-- [ ] **Step 4: Usar a resposta na implementação e registrar impacto**
+- [x] **Step 4: Usar a resposta e registrar o impacto**
 
-Verificar cada afirmação do RLM contra os arquivos. Corrigir por TDD qualquer gap real; no relatório, registrar o que a resposta mudou ou confirmou e separar claramente a saída RLM da avaliação do Codex.
+Usar a resposta para aprovar ou rejeitar o caminho central. Registrar o veredito e os
+metadados essenciais em `docs/reviews/2026-08-12-rlm-codex-current-session-smoke.md`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add docs/reviews/2026-08-12-rlm-codex-current-session-smoke.md

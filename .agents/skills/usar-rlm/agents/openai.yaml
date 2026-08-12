@@ -1,4 +1,4 @@
 interface:
   display_name: "Usar RLM"
-  short_description: "Decompõe tarefas extensas com RLM"
-  default_prompt: "Use $usar-rlm para analisar este corpus extenso e entregar a resposta com trajetória e uso."
+  short_description: "Analisa corpus extensos com RLM local"
+  default_prompt: "Use $usar-rlm para analisar este corpus extenso e aplicar a resposta Ã  tarefa atual."

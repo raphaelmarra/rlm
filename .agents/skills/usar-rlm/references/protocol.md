@@ -24,10 +24,12 @@ Em erro, leia:
 ```powershell
 rlm-codex doctor
 rlm-codex start --question "..." --context-file "arquivo-1" --context-file "arquivo-2"
-rlm-codex status <run-id>
-rlm-codex events <run-id>
 rlm-codex result <run-id> --wait --wait-timeout 900
 ```
+
+No caminho normal, vá de `start` para `result --wait`. Consulte `status` e `events`
+somente quando a espera expirar, houver demora relevante ou for necessário diagnosticar
+a trajetória.
 
 O `start` aceita:
 
@@ -61,7 +63,15 @@ rlm-codex cancel <run-id> --force --grace-seconds 30
 rlm-codex prune --older-than 7d
 ```
 
-Use `list` quando a saída inicial tiver sido perdida. `prune` remove apenas runs terminais antigos. Cancelamento forçado também limpa recursos Docker rotulados com o `run-id`.
+Use `list` quando a saída inicial tiver sido perdida. `prune` remove apenas runs terminais
+antigos. Cancelamento forçado encerra a árvore do worker local após o período de graça.
+
+## Fronteira de confiança
+
+O worker é um processo separado para heartbeat e cancelamento, não uma fronteira de
+segurança. O `LocalREPL` usa diretório temporário, mas Python gerado pode ler arquivos,
+escrever, importar módulos, acessar a rede e usar as permissões da conta local. Aceite
+somente corpus e instruções confiáveis.
 
 ## Códigos de saída
 
