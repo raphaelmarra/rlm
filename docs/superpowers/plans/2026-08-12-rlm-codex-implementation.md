@@ -341,7 +341,7 @@ git commit -m "feat: add safe RLM job runner"
 - Produces: `worker_main(run_id, home) -> int`.
 - Produces: `JobManager.start()`, `status()`, `events()`, `result()`, `cancel()`, `list_runs()` e `prune()`.
 
-- [ ] **Step 1: Escrever testes RED de start, heartbeat, sucesso e falha**
+- [x] **Step 1: Escrever testes RED de start, heartbeat, sucesso e falha**
 
 ```python
 def test_start_returns_queued_run_and_worker_pid(manager):
@@ -359,23 +359,23 @@ Run: `uv run pytest tests/codex_tool/test_jobs.py tests/codex_tool/test_worker.p
 
 Expected: FAIL porque worker e manager não existem.
 
-- [ ] **Step 2: Implementar worker com heartbeat a cada 2 s e `finally` terminal**
+- [x] **Step 2: Implementar worker com heartbeat a cada 2 s e `finally` terminal**
 
 O worker registra `started`, callbacks de iteração/subconsulta, `succeeded` ou `failed`,
 persiste resultado/erro sanitizado e encerra heartbeat e RLM em `finally`.
 
-- [ ] **Step 3: Implementar start desacoplado e detecção de órfão em 15 s**
+- [x] **Step 3: Implementar start desacoplado e detecção de órfão em 15 s**
 
 No Windows, `subprocess.Popen` usa grupo de processo novo e redireciona stdout/stderr
 para os arquivos do trabalho; em POSIX usa sessão nova.
 
-- [ ] **Step 4: Escrever e passar testes de cancelamento, `--force` e prune**
+- [x] **Step 4: Escrever e passar testes de cancelamento, `--force` e prune**
 
 Run: `uv run pytest tests/codex_tool/test_jobs.py -q`
 
 Expected: PASS, incluindo proibição de remover trabalho ativo.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add rlm/codex_tool/worker.py rlm/codex_tool/jobs.py tests/codex_tool

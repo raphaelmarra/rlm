@@ -3,14 +3,20 @@ import json
 import os
 import shutil
 import uuid
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
 
 from rlm.codex_tool.paths import CodexPaths, RunPaths
-from rlm.codex_tool.protocol import UNSET, RunState, RunStatus, datetime_string
+from rlm.codex_tool.protocol import (
+    UNSET,
+    RunState,
+    RunStatus,
+    datetime_string,
+    utc_now,
+)
 
 
 class RunNotFoundError(FileNotFoundError):
@@ -64,8 +70,14 @@ def exclusive_file_lock(path: Path) -> Iterator[None]:
 
 
 class RunStore:
-    def __init__(self, paths: CodexPaths) -> None:
+    def __init__(
+        self,
+        paths: CodexPaths,
+        *,
+        clock: Callable[[], datetime] = utc_now,
+    ) -> None:
         self.paths = paths
+        self.clock = clock
 
     def create_run(
         self,
@@ -81,7 +93,7 @@ class RunStore:
         os.chmod(run.directory, 0o700)
         try:
             with exclusive_file_lock(run.lock):
-                state = RunState.new(selected_id)
+                state = RunState.new(selected_id, now=self.clock())
                 atomic_write_json(run.request, request)
                 atomic_write_json(run.context, context)
                 atomic_write_json(run.state, state.to_dict())
@@ -102,7 +114,7 @@ class RunStore:
             raise
 
     def new_run_id(self) -> str:
-        timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        timestamp = self.clock().astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")
         return f"{timestamp}-{uuid.uuid4().hex[:8]}"
 
     def require_run(self, run_id: str) -> RunPaths:
@@ -135,15 +147,22 @@ class RunStore:
         target: RunStatus,
         *,
         pid: int | None | object = UNSET,
+        heartbeat_at: datetime | None | object = UNSET,
         progress: dict[str, int] | None = None,
         error: dict[str, Any] | None = None,
+        now: datetime | None = None,
     ) -> RunState:
         run = self.require_run(run_id)
         with exclusive_file_lock(run.lock):
             state = self.read_state(run_id)
-            transition_kwargs: dict[str, Any] = {"progress": progress}
+            transition_kwargs: dict[str, Any] = {
+                "progress": progress,
+                "now": now or self.clock(),
+            }
             if pid is not UNSET:
                 transition_kwargs["pid"] = pid
+            if heartbeat_at is not UNSET:
+                transition_kwargs["heartbeat_at"] = heartbeat_at
             if error is not None:
                 transition_kwargs["error"] = error
             changed = state.transition(target, **transition_kwargs)
@@ -161,6 +180,27 @@ class RunStore:
             )
             return changed
 
+    def update_runtime(
+        self,
+        run_id: str,
+        *,
+        pid: int | None | object = UNSET,
+        heartbeat_at: datetime | None | object = UNSET,
+        progress: dict[str, int] | None = None,
+        now: datetime | None = None,
+    ) -> RunState:
+        run = self.require_run(run_id)
+        with exclusive_file_lock(run.lock):
+            state = self.read_state(run_id)
+            changed = state.update_runtime(
+                now=now or self.clock(),
+                pid=pid,
+                heartbeat_at=heartbeat_at,
+                progress=progress,
+            )
+            atomic_write_json(run.state, changed.to_dict())
+            return changed
+
     def append_event(self, run_id: str, event: Mapping[str, Any]) -> dict[str, Any]:
         run = self.require_run(run_id)
         with exclusive_file_lock(run.lock):
@@ -168,7 +208,7 @@ class RunStore:
                 "schema_version": "1",
                 "sequence": self.next_event_sequence(run),
                 "run_id": run_id,
-                "created_at": datetime_string(datetime.now(UTC)),
+                "created_at": datetime_string(self.clock()),
                 **event,
             }
             self.append_event_locked(run, complete_event)

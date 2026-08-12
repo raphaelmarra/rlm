@@ -128,6 +128,25 @@ class RunState:
             changes["error"] = error
         return replace(self, **changes)
 
+    def update_runtime(
+        self,
+        *,
+        now: datetime | None = None,
+        pid: int | None | object = UNSET,
+        heartbeat_at: datetime | None | object = UNSET,
+        progress: dict[str, int] | None = None,
+    ) -> "RunState":
+        if self.status in TERMINAL_STATUSES:
+            raise StateConflictError(f"Run '{self.id}' is terminal in state {self.status.value}")
+        changes: dict[str, Any] = {"updated_at": now or utc_now()}
+        if pid is not UNSET:
+            changes["pid"] = pid
+        if heartbeat_at is not UNSET:
+            changes["heartbeat_at"] = heartbeat_at
+        if progress is not None:
+            changes["progress"] = dict(progress)
+        return replace(self, **changes)
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "schema_version": SCHEMA_VERSION,
