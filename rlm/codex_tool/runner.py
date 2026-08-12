@@ -1,4 +1,5 @@
 import hashlib
+import os
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path, PurePath, PureWindowsPath
@@ -42,6 +43,11 @@ class Callbacks:
     on_iteration_complete: Callable[[int, int, float], None] | None = None
     on_subcall_start: Callable[[int, str, str], None] | None = None
     on_subcall_complete: Callable[[int, str, float, str | None], None] | None = None
+
+
+def require_subscription_environment() -> None:
+    if os.getenv("OPENAI_API_KEY"):
+        raise ValueError("OPENAI_API_KEY must be unset when using the Codex backend")
 
 
 def require_nonempty_text(value: Any, field_name: str) -> str:

@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import sys
 from datetime import UTC, datetime, timedelta
@@ -7,6 +8,7 @@ from typing import Any
 
 import pytest
 
+import rlm.codex_tool.jobs as jobs_module
 from rlm.codex_tool.jobs import JobManager
 from rlm.codex_tool.paths import CodexPaths
 from rlm.codex_tool.protocol import RunStatus, StateConflictError
@@ -74,6 +76,22 @@ def test_start_returns_queued_run_and_worker_pid(store: RunStore, clock: Clock) 
         assert kwargs["creationflags"] & subprocess.CREATE_NEW_PROCESS_GROUP
     else:
         assert kwargs["start_new_session"] is True
+
+
+def test_start_rejects_api_key_before_creating_run_or_worker(
+    store: RunStore,
+    clock: Clock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("OPENAI_API_KEY", "present")
+    popen = FakePopen()
+    manager = JobManager(store, popen_factory=popen, clock=clock)
+
+    with pytest.raises(ValueError, match="OPENAI_API_KEY"):
+        manager.start(valid_request())
+
+    assert popen.calls == []
+    assert not store.paths.runs.exists()
 
 
 def test_start_tolerates_worker_finishing_before_pid_snapshot(
@@ -175,7 +193,11 @@ def test_cancel_queued_transitions_directly_to_cancelled(
     assert signalled == [1234]
 
 
-def test_force_cancel_terminates_tree_after_grace(store: RunStore, clock: Clock) -> None:
+def test_force_cancel_terminates_only_the_local_process_tree(
+    store: RunStore,
+    clock: Clock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     state = store.create_run(
         {"question": "question"},
         {"notes.txt": "context"},
@@ -183,21 +205,27 @@ def test_force_cancel_terminates_tree_after_grace(store: RunStore, clock: Clock)
     )
     store.transition(state.id, RunStatus.RUNNING, pid=1234, heartbeat_at=clock.now)
     forced: list[int] = []
-    cleaned: list[str] = []
+    external_calls: list[list[str]] = []
+
+    def record_external_call(command: list[str], **kwargs: Any) -> Any:
+        external_calls.append(command)
+        return type("Result", (), {"stdout": ""})()
+
+    monkeypatch.setattr(shutil, "which", lambda command: "docker")
+    monkeypatch.setattr(jobs_module.subprocess, "run", record_external_call)
     manager = JobManager(
         store,
         signal_sender=lambda pid: None,
         force_terminator=forced.append,
         process_checker=lambda pid: True,
         sleeper=lambda seconds: None,
-        resource_cleaner=cleaned.append,
         clock=clock,
     )
 
     state = manager.cancel(state.id, force=True, grace_seconds=0)
 
     assert forced == [1234]
-    assert cleaned == [state.id]
+    assert external_calls == []
     assert state.status is RunStatus.CANCELLED
     assert state.pid is None
 
