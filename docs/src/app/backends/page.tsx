@@ -25,6 +25,27 @@ export default function BackendsPage() {
 
       <hr className="my-8 border-border" />
 
+      <h2 className="text-2xl font-semibold mb-4">Codex (ChatGPT subscription)</h2>
+      <p className="text-muted-foreground mb-4">
+        Install the <code>codex</code> extra and authenticate the Codex CLI. This backend
+        requires ChatGPT authentication and fails before inference when
+        <code>OPENAI_API_KEY</code> is set. Use Docker so model-generated Python never runs
+        in the host process.
+      </p>
+      <CodeBlock language="bash" code={`pip install 'rlms[codex]'
+codex login`} />
+      <CodeBlock code={`rlm = RLM(
+    backend="codex",
+    backend_kwargs={
+        "model_name": "gpt-5.6-terra",
+        "reasoning_effort": "medium",
+    },
+    environment="docker",
+    max_iterations=6,
+)`} />
+
+      <hr className="my-8 border-border" />
+
       <h2 className="text-2xl font-semibold mb-4">Anthropic</h2>
       <CodeBlock code={`rlm = RLM(
     backend="anthropic",

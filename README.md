@@ -61,6 +61,32 @@ rlm = RLM(
 print(rlm.completion("Print me the first 100 powers of two, each on a newline.").response)
 ```
 
+### Codex with a ChatGPT subscription
+
+The optional Codex backend reuses an existing Codex/ChatGPT login and does not accept an
+OpenAI API key. Install the extra, authenticate the Codex CLI if needed, unset
+`OPENAI_API_KEY`, and use an isolated Docker environment for model-generated code:
+
+```bash
+pip install 'rlms[codex]'
+codex login
+```
+
+```python
+from rlm import RLM
+
+with RLM(
+    backend="codex",
+    backend_kwargs={"model_name": "gpt-5.6-terra"},
+    environment="docker",
+    max_iterations=6,
+) as rlm:
+    print(rlm.completion("Analyze the supplied context.").response)
+```
+
+If `OPENAI_API_KEY` is set, this backend fails before inference so a subscription run cannot
+silently become an API-billed run. See `examples/codex_subscription.py` for a complete example.
+
 <details>
 <summary><b>Manual Setup</b></summary>
 
@@ -127,7 +153,7 @@ export PRIME_API_KEY=...
 
 
 ### Model Providers
-We currently support most major clients (OpenAI, Anthropic), as well as the router platforms (OpenRouter, Portkey). For local models, we recommend using vLLM (which interfaces with the [OpenAI client](https://github.com/alexzhang13/rlm/blob/main/rlm/clients/openai.py)). To view or add support for more clients, start by looking at [`rlm/clients/`](https://github.com/alexzhang13/rlm/tree/main/rlm/clients).
+We currently support most major clients (OpenAI, Anthropic), the router platforms (OpenRouter, Portkey), and Codex through an existing ChatGPT subscription. For local models, we recommend using vLLM (which interfaces with the [OpenAI client](https://github.com/alexzhang13/rlm/blob/main/rlm/clients/openai.py)). To view or add support for more clients, start by looking at [`rlm/clients/`](https://github.com/alexzhang13/rlm/tree/main/rlm/clients).
 
 ## Training
 We provide a simple RL training harness for training RLMs used in this repo (specifically the `local` REPL). The implementation uses no sandboxes for simplicity and slots easily your use case, but an ideal setup would use sandboxes for safety. Training logic is isolated to the [`training/`](https://github.com/alexzhang13/rlm/tree/main/training) folder, which exposes `rlm.RLM` as a [`verifiers`](https://github.com/willccbb/verifiers) `Environment` and plugs straight into [`prime-rl`](https://github.com/PrimeIntellect-ai/prime-rl). See the [training README](https://github.com/alexzhang13/rlm/tree/main/training#readme) for the launch command. The harness uses subprocess-isolated local REPL execution (no cloud sandboxes), matching the `local` environment above.

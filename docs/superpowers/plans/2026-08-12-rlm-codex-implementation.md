@@ -140,7 +140,7 @@ git commit -m "feat: add Codex subscription client"
 - Consumes: `CodexClient` da Task 1.
 - Produces: smoke opt-in que exige `RLM_CODEX_OK` sem aceitar chave da API.
 
-- [ ] **Step 1: Escrever o teste opt-in e confirmar skip padrão**
+- [x] **Step 1: Escrever o teste opt-in e confirmar skip padrão**
 
 ```python
 @pytest.mark.skipif(
@@ -157,18 +157,18 @@ Run: `uv run pytest tests/live/test_codex_subscription.py -q`
 
 Expected: `1 skipped` sem a variável opt-in.
 
-- [ ] **Step 2: Documentar instalação e exemplo seguro**
+- [x] **Step 2: Documentar instalação e exemplo seguro**
 
 O exemplo deve construir `RLM(backend="codex", environment="docker")`, rejeitar
 execução quando `OPENAI_API_KEY` estiver presente e não conter caminhos locais.
 
-- [ ] **Step 3: Executar o smoke real por assinatura**
+- [x] **Step 3: Executar o smoke real por assinatura**
 
 Run: `$env:RLM_LIVE_CODEX='1'; Remove-Item Env:OPENAI_API_KEY -ErrorAction SilentlyContinue; uv run pytest tests/live/test_codex_subscription.py -q`
 
 Expected: `1 passed` e resposta exata `RLM_CODEX_OK`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/live examples/codex_subscription.py docs/src/app/backends/page.tsx README.md
