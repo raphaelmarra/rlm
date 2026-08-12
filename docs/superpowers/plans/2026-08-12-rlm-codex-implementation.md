@@ -271,7 +271,7 @@ git commit -m "feat: add durable RLM job protocol"
 - Produces: `validate_request()`, `snapshot_context()` e `run_rlm(request, callbacks) -> RLMChatCompletion`.
 - Produces: callbacks `on_iteration_start(depth, iteration)` e `on_iteration_complete(depth, iteration, elapsed)` realmente disparados pelo loop RLM.
 
-- [ ] **Step 1: Escrever testes dos limites de entrada e ambiente fixo**
+- [x] **Step 1: Escrever testes dos limites de entrada e ambiente fixo**
 
 ```python
 @pytest.mark.parametrize("iterations", [0, 21])
@@ -290,18 +290,18 @@ Run: `uv run pytest tests/codex_tool/test_runner.py -q`
 
 Expected: FAIL porque `runner.py` não existe.
 
-- [ ] **Step 2: Implementar validação fail-fast e snapshot por nome/hash/conteúdo**
+- [x] **Step 2: Implementar validação fail-fast e snapshot por nome/hash/conteúdo**
 
 O snapshot usa dicionário com nomes relativos únicos e conteúdo textual; arquivos
 binários ou ilegíveis falham antes de criar o worker.
 
-- [ ] **Step 3: Escrever teste RED para callbacks do loop RLM**
+- [x] **Step 3: Escrever teste RED para callbacks do loop RLM**
 
 Run: `uv run pytest tests/test_rlm_query.py -k iteration_callback -q`
 
 Expected: FAIL porque o construtor armazena callbacks, mas o loop não os dispara.
 
-- [ ] **Step 4: Disparar callbacks sem permitir que erro do observador quebre o RLM**
+- [x] **Step 4: Disparar callbacks sem permitir que erro do observador quebre o RLM**
 
 ```python
 self.fire_callback(self.on_iteration_start, self.depth, i + 1)
@@ -319,7 +319,7 @@ self.fire_callback(
 )
 ```
 
-- [ ] **Step 5: Validar testes e commit**
+- [x] **Step 5: Validar testes e commit**
 
 Run: `uv run pytest tests/codex_tool/test_runner.py tests/test_rlm_query.py -q`
 

@@ -1,4 +1,5 @@
 import time
+import warnings
 from collections.abc import Callable
 from contextlib import contextmanager
 from typing import Any
@@ -222,6 +223,15 @@ class RLM:
                 self.logger.log_metadata(metadata)
             self.verbose.print_metadata(metadata)
 
+    def fire_callback(self, callback: Callable[..., None] | None, *args: Any) -> None:
+        """Notify an observer without allowing observer failure to stop the RLM."""
+        if callback is None:
+            return
+        try:
+            callback(*args)
+        except Exception as error:
+            warnings.warn(f"RLM callback failed: {error}", RuntimeWarning, stacklevel=2)
+
     @contextmanager
     def _spawn_completion_context(self, prompt: str | dict[str, Any]):
         """
@@ -401,10 +411,18 @@ class RLM:
                         )
                     )
 
+                    self.fire_callback(self.on_iteration_start, self.depth, i + 1)
+                    iteration_started = time.perf_counter()
                     iteration: RLMIteration = self._completion_turn(
                         prompt=message_history,
                         lm_handler=lm_handler,
                         environment=environment,
+                    )
+                    self.fire_callback(
+                        self.on_iteration_complete,
+                        self.depth,
+                        i + 1,
+                        time.perf_counter() - iteration_started,
                     )
 
                     # Check error/budget/token limits after each iteration
@@ -794,12 +812,12 @@ class RLM:
         # Resolve the model name for callbacks
         prompt_preview = prompt[:80] if len(prompt) > 80 else prompt
 
-        # Fire subcall start callback
-        if self.on_subcall_start:
-            try:
-                self.on_subcall_start(next_depth, str(resolved_model), prompt_preview)
-            except Exception:
-                pass  # Don't let callback errors break execution
+        self.fire_callback(
+            self.on_subcall_start,
+            next_depth,
+            str(resolved_model),
+            prompt_preview,
+        )
 
         subcall_start = time.perf_counter()
         error_msg: str | None = None
@@ -831,6 +849,8 @@ class RLM:
             # Propagate callbacks to children for nested tracking
             on_subcall_start=self.on_subcall_start,
             on_subcall_complete=self.on_subcall_complete,
+            on_iteration_start=self.on_iteration_start,
+            on_iteration_complete=self.on_iteration_complete,
         )
         try:
             result = child.completion(prompt, root_prompt=None)
@@ -861,13 +881,13 @@ class RLM:
         finally:
             # Ensure child resources are cleaned up
             child.close()
-            # Fire subcall complete callback
-            if self.on_subcall_complete:
-                try:
-                    duration = time.perf_counter() - subcall_start
-                    self.on_subcall_complete(next_depth, str(resolved_model), duration, error_msg)
-                except Exception:
-                    pass  # Don't let callback errors break execution
+            self.fire_callback(
+                self.on_subcall_complete,
+                next_depth,
+                str(resolved_model),
+                time.perf_counter() - subcall_start,
+                error_msg,
+            )
 
     def _validate_persistent_environment_support(self) -> None:
         """

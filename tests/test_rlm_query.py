@@ -4,8 +4,13 @@ import threading
 import time
 from unittest.mock import MagicMock
 
+import pytest
+
+import rlm.core.rlm as rlm_module
+from rlm import RLM
 from rlm.core.types import RLMChatCompletion, UsageSummary
 from rlm.environments.local_repl import LocalREPL
+from tests.mock_lm import MockLM
 
 
 def _make_completion(response: str) -> RLMChatCompletion:
@@ -491,3 +496,83 @@ class TestRlmQueryScaffoldRestoration:
         repl.execute_code("answers = rlm_query_batched(['q1'])")
         assert repl.locals["answers"] == ["real"]
         repl.cleanup()
+
+
+def test_iteration_callbacks_fire_in_order() -> None:
+    callback_events: list[tuple[str, int, int, float | None]] = []
+    mock_lm = MockLM(responses=["```repl\nanswer['content'] = 'done'\nanswer['ready'] = True\n```"])
+
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        monkeypatch.setattr(rlm_module, "get_client", lambda *args, **kwargs: mock_lm)
+        rlm = RLM(
+            backend="openai",
+            backend_kwargs={"model_name": "mock-model"},
+            max_iterations=2,
+            on_iteration_start=lambda depth, iteration: callback_events.append(
+                ("start", depth, iteration, None)
+            ),
+            on_iteration_complete=lambda depth, iteration, elapsed: callback_events.append(
+                ("complete", depth, iteration, elapsed)
+            ),
+        )
+
+        assert rlm.completion("context").response == "done"
+
+    assert callback_events[0] == ("start", 0, 1, None)
+    assert callback_events[1][:3] == ("complete", 0, 1)
+    assert callback_events[1][3] is not None
+    assert callback_events[1][3] >= 0
+
+
+def test_iteration_callback_error_does_not_break_rlm() -> None:
+    mock_lm = MockLM(responses=["```repl\nanswer['content'] = 'done'\nanswer['ready'] = True\n```"])
+
+    def broken_observer(depth: int, iteration: int) -> None:
+        raise RuntimeError(f"observer failed at {depth}:{iteration}")
+
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        monkeypatch.setattr(rlm_module, "get_client", lambda *args, **kwargs: mock_lm)
+        rlm = RLM(
+            backend="openai",
+            backend_kwargs={"model_name": "mock-model"},
+            max_iterations=2,
+            on_iteration_start=broken_observer,
+        )
+
+        with pytest.warns(RuntimeWarning, match="observer failed"):
+            assert rlm.completion("context").response == "done"
+
+
+def test_iteration_callbacks_include_child_depth() -> None:
+    callback_events: list[tuple[str, int, int]] = []
+    mock_lm = MockLM(
+        responses=[
+            "```repl\nchild = rlm_query('child question')\n"
+            "answer['content'] = child\nanswer['ready'] = True\n```",
+            "```repl\nanswer['content'] = 'child answer'\nanswer['ready'] = True\n```",
+        ]
+    )
+
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        monkeypatch.setattr(rlm_module, "get_client", lambda *args, **kwargs: mock_lm)
+        rlm = RLM(
+            backend="openai",
+            backend_kwargs={"model_name": "mock-model"},
+            max_depth=2,
+            max_iterations=2,
+            on_iteration_start=lambda depth, iteration: callback_events.append(
+                ("start", depth, iteration)
+            ),
+            on_iteration_complete=lambda depth, iteration, elapsed: callback_events.append(
+                ("complete", depth, iteration)
+            ),
+        )
+
+        assert rlm.completion("context").response == "child answer"
+
+    assert callback_events == [
+        ("start", 0, 1),
+        ("start", 1, 1),
+        ("complete", 1, 1),
+        ("complete", 0, 1),
+    ]
