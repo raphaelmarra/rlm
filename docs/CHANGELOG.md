@@ -11,6 +11,8 @@ Todas as mudanças relevantes deste fork serão registradas aqui.
 - Extra opcional `codex` baseado em `openai-codex 0.144.4`.
 - Spec, ADR e estrutura de governança do backend Codex por assinatura.
 - Auditoria de coerência e coesão da spec, com `15 PASSA` e `0 FALHA`.
+- Spec e ADR da CLI global e da skill que tornam o RLM controlável pelo Codex.
+- Auditoria da spec da ferramenta, com `15 PASSA` e `0 FALHA`.
 
 ### Verificado
 
