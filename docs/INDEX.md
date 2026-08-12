@@ -20,6 +20,7 @@ Este índice separa a documentação específica do fork da documentação upstr
 | `docs/superpowers/plans/README.md` | Convenção dos planos executáveis | Referência |
 | `docs/superpowers/plans/2026-08-12-rlm-codex-implementation.md` | Plano histórico da implementação Docker, substituído | How-to |
 | `docs/superpowers/plans/2026-08-12-rlm-codex-local-execution.md` | Plano TDD vigente da execução local e das provas pelo Codex | How-to |
+| `docs/superpowers/plans/2026-08-12-oolong-codex-benchmark.md` | Plano TDD do benchmark OOLONG isolado em 25 casos | How-to |
 | `docs/decisions/0001-sdk-codex-como-backend-de-assinatura.md` | Decisão histórica do backend e Docker, substituída por `0003` | Explicação |
 | `docs/decisions/0002-cli-global-e-skill-como-superficie-do-codex.md` | Decisão histórica da CLI/skill com Docker, substituída por `0003` | Explicação |
 | `docs/decisions/0003-cli-skill-e-worker-local-confiavel.md` | Decisão vigente: CLI + skill + worker local confiável | Explicação |

@@ -28,8 +28,10 @@ Todas as mudanças relevantes deste fork serão registradas aqui.
   portabilidade, benchmark controlado e fechamento dos treze critérios de aceite.
 - Smoke real opt-in de um único fluxo `start → result --wait`, com `LocalREPL` e
   exatamente uma `llm_query`.
-- Desenho do benchmark OOLONG isolado com 50 casos oficiais de 131K, baseline direto,
+- Desenho do benchmark OOLONG isolado com 25 casos oficiais de 131K, baseline direto,
   RLM profundidade 1 e scorer upstream.
+- Plano TDD do projeto isolado, preparação oficial, braços A/B, scoring, relatório e
+  execução real do benchmark OOLONG.
 
 ### Alterado
 

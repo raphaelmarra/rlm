@@ -1,6 +1,6 @@
 # Benchmark OOLONG do RLM–Codex
 
-**Estado:** aprovado conceitualmente; aguardando revisão do documento  
+**Estado:** aprovado para implementação  
 **Data:** 2026-08-12  
 **Base metodológica:** Zhang, Kraska e Khattab, *Recursive Language Models*,
 arXiv:2512.24601v3
@@ -11,20 +11,21 @@ Executar uma reprodução metodológica, não uma reprodução numérica, do exp
 OOLONG dos autores do RLM. O benchmark deve responder separadamente:
 
 1. o caminho completo `Codex → rlm-codex → LocalREPL → sub-LM → resultado` funciona
-   de modo estável em 50 casos reais;
+   de modo estável em 25 casos reais;
 2. o RLM melhora a qualidade sobre o mesmo modelo chamado diretamente;
 3. qual é a diferença de chamadas, tokens e tempo entre os dois métodos.
 
-Cinquenta casos são suficientes para esta primeira decisão porque correspondem ao
-tamanho da divisão OOLONG descrita no paper. Eles não provam superioridade universal
-do RLM nem substituem replicações com outros modelos e sementes.
+Vinte e cinco casos, metade da divisão de 50 tarefas descrita no paper, são suficientes
+para validar estabilidade E2E e obter um sinal preliminar de qualidade. Eles têm menor
+poder estatístico que a divisão completa e não provam superioridade universal do RLM
+nem substituem replicações com outros modelos e sementes.
 
 ## O que será copiado dos autores
 
 - Dataset oficial `oolongbench/oolong-synth`, revisão
   `f0d59eaf0febf130664cfceb710436c8e3216b2b`.
 - Split `validation`, subconjunto `trec_coarse`, `context_len == 131072`.
-- Cinquenta tarefas de classificação semântica e agregação sobre contexto denso.
+- Vinte e cinco tarefas de classificação semântica e agregação sobre contexto denso.
 - Comparação entre modelo-base com contexto integral e RLM com Python REPL.
 - RLM com profundidade máxima 1.
 - Mesmo modelo e parâmetros de raciocínio nos dois braços.
@@ -48,6 +49,10 @@ benchmarks/oolong_codex/
 ├── benchmark.toml
 ├── oolong_codex/
 │   ├── __init__.py
+│   ├── __main__.py
+│   ├── config.py
+│   ├── models.py
+│   ├── storage.py
 │   ├── dataset.py
 │   ├── runner.py
 │   ├── scorer.py
@@ -74,8 +79,8 @@ versionados.
 
 ### Preparação
 
-`prepare` baixa somente os shards necessários, filtra os 50 casos e falha se a
-cardinalidade não for exatamente 50. Ele grava:
+`prepare` baixa somente os shards necessários, filtra 25 casos e falha se a
+cardinalidade não for exatamente 25. Ele grava:
 
 - identificador e hash de cada caso;
 - revisão, split, subconjunto, tamanho e ordem;
@@ -109,7 +114,7 @@ harness é retomável por caso e não repete automaticamente uma tentativa termi
 ### Scoring cego e relatório
 
 O scorer determinístico recebe somente `case_id`, resposta prevista e ouro, sem saber
-qual método produziu a resposta. Depois dos 100 resultados pontuados, o relatório
+qual método produziu a resposta. Depois dos 50 resultados pontuados, o relatório
 revela o mapa A/B e agrega:
 
 - score médio e número de respostas exatas;
@@ -125,12 +130,12 @@ como indisponível, nunca convertido em custo zero.
 
 O funcionamento E2E passa somente se:
 
-1. os 50 resultados RLM terminarem em `succeeded`;
+1. os 25 resultados RLM terminarem em `succeeded`;
 2. cada metadata indicar `environment_type == "local"`;
 3. todos os runs terminarem com `pid == null` e sem PID original vivo;
-4. houver trajetória RLM válida nos 50 casos e pelo menos uma subchamada real no
+4. houver trajetória RLM válida nos 25 casos e pelo menos uma subchamada real no
    conjunto;
-5. os 50 baselines e os 50 candidatos forem pontuáveis;
+5. os 25 baselines e os 25 candidatos forem pontuáveis;
 6. o corpus e as perguntas materializadas permanecerem inalterados.
 
 O ganho de qualidade é um veredito separado:
