@@ -394,7 +394,7 @@ git commit -m "feat: manage durable RLM workers"
 - Produces: `doctor`, `start`, `status`, `events`, `result`, `cancel`, `list` e `prune`.
 - Produces: códigos de saída `0`, `2`, `3`, `4`, `5` e `10` conforme a spec.
 
-- [ ] **Step 1: Escrever teste RED de `doctor` e objeto JSON único**
+- [x] **Step 1: Escrever teste RED de `doctor` e objeto JSON único**
 
 ```python
 def test_doctor_reports_missing_docker_as_preflight_error(cli, env):
@@ -409,7 +409,7 @@ Run: `uv run pytest tests/codex_tool/test_cli.py -q`
 
 Expected: FAIL porque `cli.py` e o entry point ainda não existem.
 
-- [ ] **Step 2: Implementar parser e despacho sem imprimir logs no stdout**
+- [x] **Step 2: Implementar parser e despacho sem imprimir logs no stdout**
 
 ```python
 def main(argv: Sequence[str] | None = None) -> int:
@@ -422,19 +422,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     return exit_code
 ```
 
-- [ ] **Step 3: Cobrir todos os comandos em subprocesso e `events --follow`**
+- [x] **Step 3: Cobrir todos os comandos em subprocesso e `events --follow`**
 
 Run: `uv run pytest tests/codex_tool/test_cli.py -q`
 
 Expected: PASS para argumentos, conflitos, timeout, run inexistente e saída JSONL.
 
-- [ ] **Step 4: Verificar o entry point fora do checkout com home temporário**
+- [x] **Step 4: Verificar o entry point fora do checkout com home temporário**
 
 Run: `uv tool run --from ".[codex]" rlm-codex doctor`
 
 Expected nesta fase: JSON válido e código `3` exclusivamente por Docker/skill ausentes.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add rlm/codex_tool/cli.py pyproject.toml tests/codex_tool/test_cli.py uv.lock
